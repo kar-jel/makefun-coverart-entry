@@ -45,6 +45,9 @@ export function bindControls(api) {
   el("layouts").onclick = (e) => {
     if (e.target.dataset.key) api.setLayout(e.target.dataset.key);
   };
+  const panelPicker = el("panelPicker");
+  api.updatePanelPicker = () => { panelPicker.replaceChildren(...LAYOUTS[s.layout].panels.map((_, i) => { const b=document.createElement("button"); b.type="button"; b.textContent=`P${String(i+1).padStart(2,"0")}`; b.className=i===s.selected?"active":""; b.setAttribute("aria-pressed",String(i===s.selected)); b.onclick=()=>api.selectPanel(i); return b; })); };
+  panelPicker.onclick = (e) => { const i=[...panelPicker.children].indexOf(e.target); if(i>=0) api.selectPanel(i); };
   // Render preset chips from the defensive preset library.
   const applyPreset = (preset) => {
     if (!preset) return;
@@ -169,6 +172,9 @@ export function bindControls(api) {
     bind(id, key, () => {
       if (id === "size") api.fitCanvas();
     });
+  const fitView=el("fitView"), resetView=el("resetView");
+  fitView.onclick=()=>{ fitCanvas(); el("stageZoom").textContent="100%"; };
+  resetView.onclick=()=>{ s.crops[s.selected].zoom=1; s.crops[s.selected].x=0; s.crops[s.selected].y=0; api.sync(); api.render(); };
   el("zoom").oninput = (e) => {
     s.crops[s.selected].zoom = Number(e.target.value);
     api.sync();

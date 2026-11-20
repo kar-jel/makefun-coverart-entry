@@ -21,11 +21,7 @@
     </header>
     <main class="workspace">
       <aside class="sidebar">
-        <div class="intro">
-          <div class="eyebrow">YOUR CITY. YOUR STORY.</div>
-          <h1>Make a cover<br />worth <em>keeping.</em></h1>
-          <p>Drop a photo. Set the scene. Make it yours.</p>
-        </div>
+        <div class="intro"><div class="eyebrow">VICE//FRAME · YOUR CITY. YOUR STORY.</div></div>
         <div class="blocktitle"><span>EDITOR</span></div><nav id="editorTabs" class="editor-tabs"><button data-pane="photos" class="active">PHOTO</button><button data-pane="look">GRADE</button><button data-pane="type">TYPE</button><button data-pane="layers">LAYERS</button><button data-pane="presets">PRESETS</button></nav><div class="historybar"><button id="undo" disabled>↶ Undo</button><button id="redo" disabled>↷ Redo</button></div><div id="presetStrip" class="preset-strip"></div><button id="savePreset" class="textbtn">＋ SAVE PRESET</button><button id="randomPreset" class="textbtn">⤨ RANDOM</button>
         <section class="block photos" data-pane-content="photos">
           <div class="blocktitle">
@@ -49,9 +45,7 @@
         <section class="block" data-pane-content="photos">
           <div class="blocktitle"><span>02 / COMPOSITION</span></div>
           <div class="seg" id="layouts"></div>
-          <div class="row">
-            <label>Panel target</label><span id="selectedName">PANEL 01</span>
-          </div>
+          <div class="row"><label>Panel target</label><span id="selectedName">PANEL 01</span></div><div id="panelPicker" class="panel-picker" aria-label="Select panel"></div>
           <label class="check vary-check"><input id="varyPanels" type="checkbox" checked /> Vary photos &amp; crops by panel</label>
           <div class="buttonrow">
             <button id="rotate">↻ Rotate</button
@@ -169,6 +163,7 @@
         </section>
       </aside>
       <section class="stage">
+        <div class="stage-export"><label>EXPORT PNG · SIZE<select id="size"></select></label><button id="download" class="download">↓ DOWNLOAD PNG</button></div>
         <div class="stagehead">
           <div>
             <span class="eyebrow">LIVE CANVAS</span
@@ -182,10 +177,7 @@
           <canvas id="poster" aria-label="Poster preview"></canvas>
           <div id="toast" role="status"></div>
         </div>
-        <div class="stagefoot">
-          <span>◈ &nbsp; ORIGINAL ARTWORK · MADE BY YOU</span
-          ><span>← ↑ ↓ → NUDGE &nbsp; · &nbsp; + / − ZOOM</span>
-        </div>
+        <div class="stagefoot"><span>ZOOM <b id="stageZoom">100%</b> <button id="fitView">FIT</button> <button id="resetView">RESET</button></span><span>DRAG · WHEEL ZOOM · ARROWS NUDGE · + / − ZOOM</span></div>
       </section>
     </main>
   </body>

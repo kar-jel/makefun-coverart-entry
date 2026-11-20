@@ -209,9 +209,16 @@ export function drawPanel(ctx, w, h, state, index) {
     y = p.y * h,
     pw = p.w * w,
     ph = p.h * h,
-    sourceCrop = state.crops[index] || { photo: 0, x: 0, y: 0, zoom: 1, rotate: 0 },
-    c = { ...sourceCrop, rotate: (sourceCrop.rotate || 0) + (p.rotate || 0) };
+  const sourceCrop = state.crops[index] || { photo: 0, x: 0, y: 0, zoom: 1, rotate: 0 };
+  const c = { ...sourceCrop, rotate: sourceCrop.rotate || 0, panelRotate: p.rotate || 0 };
   ctx.save();
+  if (c.panelRotate) {
+    ctx.save(); ctx.translate(x+pw/2,y+ph/2); ctx.rotate(c.panelRotate*Math.PI/180);
+    ctx.fillStyle="#090d1b"; ctx.fillRect(-pw/2-2,-ph/2-2,pw+4,ph+4);
+    if(photo) coverImage(ctx,photo,-pw/2,-ph/2,pw,ph,c);
+    ctx.strokeStyle="rgba(73,238,255,.9)";ctx.lineWidth=Math.max(1,h*.002);ctx.strokeRect(-pw/2,-ph/2,pw,ph);ctx.restore();
+    return;
+  }
   // A continuous dark ground replaces white gutters; panels overlap as cutouts.
   ctx.fillStyle = "#090d1b";
   ctx.fillRect(x - 2, y - 2, pw + 4, ph + 4);

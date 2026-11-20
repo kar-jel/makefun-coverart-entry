@@ -93,6 +93,7 @@ function select(i) {
   state.selected = i;
   document.querySelector("#selectedName").textContent =
     `PANEL ${String(i + 1).padStart(2, "0")}`;
+  api.updatePanelPicker?.();
   render();
 }
 function pos(e) {
@@ -145,6 +146,7 @@ function sync() {
   const z = state.crops[state.selected].zoom;
   document.querySelector("#zoom").value = z;
   document.querySelector("#zoomOut").value = z.toFixed(2) + "×";
+  document.querySelector("#stageZoom").textContent = `${Math.round(z*100)}%`;
   document.querySelector("#ratio").textContent = SIZES[state.size].label;
 }
 function setLayout(k) {
@@ -154,9 +156,7 @@ function setLayout(k) {
     if (crop) return crop;
     return { photo: state.varyPanels && state.photos.length ? i % state.photos.length : 0, x: 0, y: 0, zoom: 1, rotate: 0, flip: false };
   });
-  document
-    .querySelectorAll("#layouts button")
-    .forEach((b) => b.classList.toggle("active", b.dataset.key === k));
+  api.updatePanelPicker?.();
   render();
 }
 function setLook(k) {
@@ -224,6 +224,8 @@ const api = {
       return img;
     }),
   fitPanels,
+  selectPanel: select,
+  updatePanelPicker: null,
 };
 // Automated screenshots use this hook to verify PNG export sizes.
 window.makefunExport = (sizeKey) =>

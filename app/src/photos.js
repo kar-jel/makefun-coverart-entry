@@ -50,7 +50,13 @@ export function refreshPhotoList(state) {
     chip.type = "button";
     chip.className = "photo-chip";
     chip.dataset.photo = index;
-    chip.textContent = `${index + 1} · ${(photo._label || `Photo ${index + 1}`).slice(0, 18)}`;
+    const thumb=document.createElement("canvas"); thumb.width=96; thumb.height=64;
+    const tc=thumb.getContext("2d"), scale=Math.max(thumb.width/photo.width,thumb.height/photo.height);
+    const sw=photo.width*scale, sh=photo.height*scale, crop=state.crops.find(c=>c.photo===index);
+    const ox=(thumb.width-sw)/2-(crop?.x||0)*sw*.38, oy=(thumb.height-sh)/2-(crop?.y||0)*sh*.38;
+    tc.drawImage(photo,ox,oy,sw,sh);
+    const label=document.createElement("span"); label.textContent=`${index+1} · ${(photo._label || `Photo ${index+1}`).slice(0,18)}`;
+    chip.append(thumb,label);
     const selected = state.crops[state.selected]?.photo ?? 0;
     chip.classList.toggle("active", selected === index);
     list.append(chip);
