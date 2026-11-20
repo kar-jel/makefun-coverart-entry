@@ -1,4 +1,5 @@
 import { LAYOUTS, GRADES, LETTERING, SIZES } from "./state.js";
+import { runPipeline } from "./filters.js";
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 function coverImage(ctx, img, x, y, w, h, c) {
   if (!img) return;
@@ -213,15 +214,19 @@ export function drawPanel(ctx, w, h, state, index) {
   ctx.fillStyle = "#fff0ce";
   ctx.fillRect(x - 2, y - 2, pw + 4, ph + 4);
   const photo=state.photos[c.photo] || state.photos[0];
-  if(state.ink) posterizePanel(ctx,x,y,pw,ph,state,photo,c); else coverImage(ctx,photo,x,y,pw,ph,c);
-  if(!state.ink) {
-  ctx.filter = `hue-rotate(${state.hue}deg) saturate(${state.saturation}%) contrast(${state.contrast}%)`;
-  ctx.globalCompositeOperation = "source-atop";
-  ctx.fillStyle = `rgba(255,${150 + state.warmth},95,.12)`;
-  ctx.fillRect(x, y, pw, ph);
-  ctx.filter = "none";
-  ctx.globalCompositeOperation = "source-over";
-  drawGrade(ctx, x, y, pw, ph, state);
+  if (state.ink) posterizePanel(ctx,x,y,pw,ph,state,photo,c); else coverImage(ctx,photo,x,y,pw,ph,c);
+  if (!state.ink && photo) {
+    const pixels = ctx.getImageData(x, y, pw, ph);
+    runPipeline(pixels, [
+      { name: "grade", options: {
+        hue: state.hue + (GRADES[state.grade]?.hue || 0),
+        saturation: state.saturation / 100 * (GRADES[state.grade]?.sat || 1),
+        contrast: state.contrast / 100 * (GRADES[state.grade]?.contrast || 1),
+        warmth: state.warmth + (GRADES[state.grade]?.warm || 0),
+      } },
+      { name: "vignette", options: { amount: state.vignette / 100 } },
+    ]);
+    ctx.putImageData(pixels, x, y);
   }
   if(state.ink) drawInk(ctx,x,y,pw,ph,state.ink);
   ctx.save();

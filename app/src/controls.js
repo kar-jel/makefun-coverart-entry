@@ -31,14 +31,106 @@ export function bindControls(api) {
         return o;
       }),
     );
-  el("editorTabs").onclick=e=>{const b=e.target.closest("button[data-pane]");if(!b)return;document.querySelectorAll("[data-pane-content]").forEach(x=>x.hidden=x.dataset.paneContent!==b.dataset.pane);document.querySelectorAll("#editorTabs button").forEach(x=>x.classList.toggle("active",x===b))};
+  // Switch visible editor panel and keep the selected tab accessible.
+  el("editorTabs").onclick = (event) => {
+    const button = event.target.closest("button[data-pane]");
+    if (!button) return;
+    document.querySelectorAll("[data-pane-content]").forEach((panel) => {
+      panel.hidden = panel.dataset.paneContent !== button.dataset.pane;
+    });
+    document.querySelectorAll("#editorTabs button").forEach((tab) => {
+      tab.classList.toggle("active", tab === button);
+    });
+  };
   el("layouts").onclick = (e) => {
     if (e.target.dataset.key) api.setLayout(e.target.dataset.key);
   };
-  const presetRefresh=()=>{const host=el("presetStrip");host.replaceChildren();for(const p of listPresets()){const b=document.createElement("button");b.className="preset-chip";b.textContent=p.label||p.name;b.onclick=()=>{api.setLook(p.grade||"neon");s.caption=p.caption||s.caption;el("caption").value=s.caption;api.render()};host.append(b)}};presetRefresh();el("savePreset").onclick=()=>{savePreset({name:`My ${new Date().toLocaleTimeString()}`,grade:s.grade,lettering:s.lettering,decor:s.decor,caption:s.caption});presetRefresh()};el("randomPreset").onclick=()=>{const p=randomPreset();api.setLook(p.grade);s.caption=p.caption;el("caption").value=s.caption;api.render()};
-  const presetLib=el("presetLibrary");for(const p of listPresets()){const b=document.createElement("button");b.className="preset-chip";b.textContent=p.label||p.name;b.onclick=()=>{api.setLook(p.grade||"neon");s.caption=p.caption||s.caption;el("caption").value=s.caption;api.render()};presetLib.append(b)}
+  // Render preset chips from the defensive preset library.
+  const applyPreset = (preset) => {
+    if (!preset) return;
+    api.setLook(preset.grade || "neon");
+    for (const key of ["caption", "hue", "saturation", "contrast", "warmth", "vignette", "capSize", "spacing", "outline", "shadow", "capY"]) {
+      if (preset[key] !== undefined) s[key] = preset[key];
+    }
+    api.syncInputs();
+    api.render();
+  };
+  const presetRefresh = () => {
+    const host = el("presetStrip");
+    host.replaceChildren();
+    for (const preset of listPresets()) {
+      const button = document.createElement("button");
+      button.className = "preset-chip";
+      button.textContent = preset.label || preset.name;
+      button.onclick = () => applyPreset(preset);
+      host.append(button);
+    }
+  };
+  presetRefresh();
+  el("savePreset").onclick = () => {
+    savePreset({ name: `My ${new Date().toLocaleTimeString()}`, grade: s.grade,
+      lettering: s.lettering, decor: s.decor, caption: s.caption, hue: s.hue,
+      saturation: s.saturation, contrast: s.contrast, warmth: s.warmth,
+      vignette: s.vignette, capSize: s.capSize, spacing: s.spacing,
+      outline: s.outline, shadow: s.shadow, capY: s.capY });
+    presetRefresh();
+  };
+  el("randomPreset").onclick = () => applyPreset(randomPreset());
+  const presetLib = el("presetLibrary");
+  for (const preset of listPresets()) {
+    const button = document.createElement("button");
+    button.className = "preset-chip";
+    button.textContent = preset.label || preset.name;
+    button.onclick = () => applyPreset(preset);
+    presetLib.append(button);
+  }
   const layerHost=el("layerList");const drawLayerList=()=>{layerHost.replaceChildren();s.layers.forEach((l,i)=>{const row=document.createElement("label");row.className="check";const cb=document.createElement("input");cb.type="checkbox";cb.checked=l.visible;cb.onchange=()=>{l.visible=cb.checked;api.render()};row.append(cb,document.createTextNode(l.name));layerHost.append(row)})};drawLayerList();el("layerRotate").oninput=e=>{const l=s.layers.find(x=>!x.locked&&x.type==="text"&&x.visible);if(l){l.rotation=Number(e.target.value);api.render()}};
-  const hist=window.makefunHistory;const histButtons=()=>{el("undo").disabled=!hist.canUndo();el("redo").disabled=!hist.canRedo()};const checkpoint=()=>{hist.push({layout:s.layout,size:s.size,caption:s.caption,grade:s.grade,lettering:s.lettering,decor:s.decor,hue:s.hue,saturation:s.saturation,contrast:s.contrast,warmth:s.warmth,vignette:s.vignette,capSize:s.capSize,spacing:s.spacing,outline:s.outline,shadow:s.shadow,capY:s.capY,crops:s.crops,layers:s.layers})};const restore=o=>{Object.assign(s,o);api.syncInputs();drawLayerList();api.render();histButtons()};el("undo").onclick=()=>{const o=hist.undo({layout:s.layout,size:s.size,caption:s.caption,grade:s.grade,lettering:s.lettering,decor:s.decor,hue:s.hue,saturation:s.saturation,contrast:s.contrast,warmth:s.warmth,vignette:s.vignette,capSize:s.capSize,spacing:s.spacing,outline:s.outline,shadow:s.shadow,capY:s.capY,crops:s.crops,layers:s.layers});restore(o)};el("redo").onclick=()=>{const o=hist.redo({layout:s.layout,size:s.size,caption:s.caption,grade:s.grade,lettering:s.lettering,decor:s.decor,hue:s.hue,saturation:s.saturation,contrast:s.contrast,warmth:s.warmth,vignette:s.vignette,capSize:s.capSize,spacing:s.spacing,outline:s.outline,shadow:s.shadow,capY:s.capY,crops:s.crops,layers:s.layers});restore(o)};
+  const hist = window.makefunHistory;
+  // Refresh undo and redo button availability.
+  // Lock/unlock one layer and redraw the layer list.
+  const histButtons = () => {
+    el("undo").disabled = !hist.canUndo();
+    el("redo").disabled = !hist.canRedo();
+  };
+  // Save a labelled snapshot before an editor change.
+  const checkpoint = (label = "Change") => {
+    hist.push({ layout: s.layout, size: s.size, caption: s.caption, grade: s.grade,
+      lettering: s.lettering, decor: s.decor, hue: s.hue, saturation: s.saturation,
+      contrast: s.contrast, warmth: s.warmth, vignette: s.vignette, capSize: s.capSize,
+      spacing: s.spacing, outline: s.outline, shadow: s.shadow, capY: s.capY,
+      crops: s.crops, layers: s.layers }, label);
+    histButtons();
+  };
+  // Restore editor state and refresh dependent UI.
+  const restore = (snapshot) => { Object.assign(s, snapshot); api.syncInputs(); drawLayerList(); api.render(); histButtons(); };
+  // Undo the last edit and update history controls.
+  el("undo").onclick = () => {
+    const current = { layout: s.layout, size: s.size, caption: s.caption, grade: s.grade,
+      lettering: s.lettering, decor: s.decor, hue: s.hue, saturation: s.saturation,
+      contrast: s.contrast, warmth: s.warmth, vignette: s.vignette, capSize: s.capSize,
+      spacing: s.spacing, outline: s.outline, shadow: s.shadow, capY: s.capY,
+      crops: s.crops, layers: s.layers };
+    restore(hist.undo(current));
+  };
+  // Redo the next edit and update history controls.
+  el("redo").onclick = () => {
+    const current = { layout: s.layout, size: s.size, caption: s.caption, grade: s.grade,
+      lettering: s.lettering, decor: s.decor, hue: s.hue, saturation: s.saturation,
+      contrast: s.contrast, warmth: s.warmth, vignette: s.vignette, capSize: s.capSize,
+      spacing: s.spacing, outline: s.outline, shadow: s.shadow, capY: s.capY,
+      crops: s.crops, layers: s.layers };
+    restore(hist.redo(current));
+  };
+  // Bind editor shortcuts to the same undo and redo actions.
+  window.addEventListener("keydown", (event) => {
+    if (!(event.ctrlKey || event.metaKey) || /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+    const undoing = event.key.toLowerCase() === "z" && !event.shiftKey;
+    const redoing = event.key.toLowerCase() === "y" || (event.key.toLowerCase() === "z" && event.shiftKey);
+    if (undoing) el("undo").click();
+    else if (redoing) el("redo").click();
+    else return;
+    event.preventDefault();
+  });
   el("layouts").onclick = (e) => { if (e.target.dataset.key) api.setLayout(e.target.dataset.key); };
   el("looks").onclick = (e) => {
     if (e.target.dataset.key) api.setLook(e.target.dataset.key);

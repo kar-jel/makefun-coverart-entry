@@ -1,14 +1,284 @@
-const cache=new Map(), LIMIT=32;
-const hash=(o)=>JSON.stringify(o,Object.keys(o).sort());
-function cached(data,options,fn){const k=hash(options)+":"+data.width+"x"+data.height;if(cache.has(k)){const v=cache.get(k);cache.delete(k);cache.set(k,v);return new ImageData(new Uint8ClampedArray(v),data.width,data.height)}fn(data);cache.set(k,new Uint8ClampedArray(data.data));if(cache.size>LIMIT)cache.delete(cache.keys().next().value);return data}
-export function applyGrade(d,{hue=0,saturation=1,contrast=1,warmth=0,lift=0,gain=1}={}){return cached(d,{hue,saturation,contrast,warmth,lift,gain},x=>{let a=x.data;for(let i=0;i<a.length;i+=4){let r=a[i],g=a[i+1],b=a[i+2],Y=.299*r+.587*g+.114*b,U=-.147*r-.289*g+.436*b,V=.615*r-.515*g-.1*b,t=hue*Math.PI/180,co=Math.cos(t),si=Math.sin(t),u=(U*co-V*si)*saturation,v=(U*si+V*co)*saturation,y=(Y-128)*contrast+128+lift;a[i]=y+1.14*v;a[i+1]=y-.395*u-.581*v+warmth;a[i+2]=y+2.033*u;for(let j=0;j<3;j++)a[i+j]=Math.max(0,Math.min(255,(a[i+j]*gain)));}})}
-export function applyDuotone(d,{dark="#16102b",light="#ffd27a",amount=1}={}){return cached(d,{dark,light,amount},x=>{const c=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));let lo=c(dark),hi=c(light),a=x.data;for(let i=0;i<a.length;i+=4){let t=(.299*a[i]+.587*a[i+1]+.114*a[i+2])/255;for(let j=0;j<3;j++)a[i+j]=a[i+j]*(1-amount)+(lo[j]+(hi[j]-lo[j])*t)*amount}})}
-export function applyPosterize(d,{levels=6}={}){return cached(d,{levels},x=>{let s=255/(Math.max(2,levels)-1);for(let i=0;i<x.data.length;i+=4)for(let j=0;j<3;j++)x.data[i+j]=Math.round(x.data[i+j]/s)*s})}
-export function applyHalftone(d,{cell=8,angle=0}={}){return cached(d,{cell,angle},x=>{let a=x.data,src=new Uint8ClampedArray(a),w=d.width,h=d.height,t=angle*Math.PI/180;for(let y=0;y<h;y+=cell)for(let z=0;z<w;z+=cell){let sx=Math.min(w-1,z+cell/2),sy=Math.min(h-1,y+cell/2),idx=(sy*w+sx)*4,lum=(.299*src[idx]+.587*src[idx+1]+.114*src[idx+2])/255,r=cell*.48*Math.sqrt(1-lum);for(let yy=y;yy<Math.min(h,y+cell);yy++)for(let xx=z;xx<Math.min(w,z+cell);xx++){let dx=xx-sx,dy=yy-sy,rx=dx*Math.cos(t)-dy*Math.sin(t),ry=dx*Math.sin(t)+dy*Math.cos(t);if(rx*rx+ry*ry>r*r){let q=(yy*w+xx)*4;a[q]=a[q+1]=a[q+2]=255}}}})}
-export function applyScanlines(d,{period=3,alpha=.2}={}){return cached(d,{period,alpha},x=>{for(let y=0;y<d.height;y+=period)for(let xx=0;xx<d.width;xx++){let i=(y*d.width+xx)*4;for(let j=0;j<3;j++)x.data[i+j]*=1-alpha}})}
-export function applyGrain(d,{amount=12,seed=1}={}){return cached(d,{amount,seed},x=>{let n=seed>>>0;for(let i=0;i<x.data.length;i+=4){n=(n*1664525+1013904223)>>>0;let v=((n>>>24)/255-.5)*amount;for(let j=0;j<3;j++)x.data[i+j]+=v}})}
-export function applyChromatic(d,{offset=2}={}){return cached(d,{offset},x=>{let a=new Uint8ClampedArray(x.data),w=d.width;for(let y=0;y<d.height;y++)for(let z=0;z<w;z++){let i=(y*w+z)*4;x.data[i]=a[(y*w+Math.max(0,z-offset))*4];x.data[i+2]=a[(y*w+Math.min(w-1,z+offset))*4+2]}})}
-export function applyVignette(d,{amount=.5}={}){return cached(d,{amount},x=>{let a=x.data,w=d.width,h=d.height;for(let y=0;y<h;y++)for(let z=0;z<w;z++){let r=Math.hypot((z-w/2)/(w/2),(y-h/2)/(h/2)),m=Math.max(0,1-amount*Math.max(0,r-.25));let i=(y*w+z)*4;for(let j=0;j<3;j++)a[i+j]*=m}})}
-export function applyLightLeak(d,{colour="#ff5588",amount=.3,from="left"}={}){return cached(d,{colour,amount,from},x=>{let c=[1,3,5].map(i=>parseInt(colour.slice(i,i+2),16)),a=x.data,w=d.width,h=d.height;for(let y=0;y<h;y++)for(let z=0;z<w;z++){let t=(from==="right"?w-1-z:z)/w*(1-y/h),i=(y*w+z)*4,m=t*amount;for(let j=0;j<3;j++)a[i+j]=a[i+j]*(1-m)+c[j]*m}})}
-const fns={grade:applyGrade,duotone:applyDuotone,posterize:applyPosterize,halftone:applyHalftone,scanlines:applyScanlines,grain:applyGrain,chromatic:applyChromatic,vignette:applyVignette,lightLeak:applyLightLeak};
-export function runPipeline(data,stages){for(const s of stages){const fn=fns[s.name];if(!fn)throw Error(`Unknown filter: ${s.name}`);data=fn(data,s.options||{})}return data}
+// Apply modular pixel filters and cache their results in a bounded LRU.
+// Internal LRU storage and maximum entry count.
+const CACHE_LIMIT = 32;
+const cache = new Map();
+
+// Clamp channel values while converting invalid numbers to black.
+export function clampByte(value) {
+  return Math.max(0, Math.min(255, Number.isFinite(value) ? value : 0));
+}
+
+// Calculate perceptual luminance from RGB channels.
+export function luma(red, green, blue) {
+  return 0.299 * red + 0.587 * green + 0.114 * blue;
+}
+
+// Validate an option and clamp it to a safe range.
+function numberOption(value, fallback, min, max) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : fallback;
+}
+
+// Parse a six-digit hex colour or return a reliable fallback.
+function parseColor(value, fallback) {
+  const match = /^#?([\da-f]{6})$/i.exec(String(value || ""));
+  const hex = match ? match[1] : fallback;
+  return [0, 2, 4].map((index) => parseInt(hex.slice(index, index + 2), 16));
+}
+
+// Serialize option objects consistently, including nested objects.
+function stable(value) {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stable(value[key])}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+// Hash text with FNV-1a for compact cache keys.
+function hash(text) {
+  let result = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    result = Math.imul(result ^ text.charCodeAt(index), 16777619);
+  }
+  return (result >>> 0).toString(16);
+}
+
+// Build a content-and-settings key for a pixel buffer.
+export function cacheKey(data, options = {}) {
+  let pixels = 2166136261;
+  for (let index = 0; index < data.data.length; index += 97) {
+    pixels = Math.imul(pixels ^ data.data[index], 16777619);
+  }
+  return `${data.width}x${data.height}:${(pixels >>> 0).toString(16)}:${hash(stable(options))}`;
+}
+
+// Empty the pixel cache and reset hit and miss counters.
+export function clearCache() {
+  cache.clear();
+  cache.hits = 0;
+  cache.misses = 0;
+}
+
+// Return cache size and hit/miss metrics.
+export function cacheStats() {
+  return { size: cache.size, limit: CACHE_LIMIT, hits: cache.hits || 0, misses: cache.misses || 0 };
+}
+
+// Run an operation with LRU lookup and store a copy of its output.
+function cached(data, options, operation) {
+  const key = cacheKey(data, options);
+  if (cache.has(key)) {
+    const pixels = cache.get(key);
+    cache.delete(key);
+    cache.set(key, pixels);
+    cache.hits = (cache.hits || 0) + 1;
+    data.data.set(pixels);
+    return data;
+  }
+  cache.misses = (cache.misses || 0) + 1;
+  operation(data);
+  cache.set(key, new Uint8ClampedArray(data.data));
+  if (cache.size > CACHE_LIMIT) cache.delete(cache.keys().next().value);
+  return data;
+}
+
+// Apply hue, saturation, contrast, warmth, lift, and gain adjustments.
+export function applyGrade(data, settings = {}) {
+  const hue = numberOption(settings.hue, 0, -360, 360);
+  const saturation = numberOption(settings.saturation, 1, 0, 4);
+  const contrast = numberOption(settings.contrast, 1, 0, 4);
+  const warmth = numberOption(settings.warmth, 0, -255, 255);
+  const lift = numberOption(settings.lift, 0, -255, 255);
+  const gain = numberOption(settings.gain, 1, 0, 4);
+  return cached(data, { hue, saturation, contrast, warmth, lift, gain }, (image) => {
+    const pixels = image.data;
+    const angle = hue * Math.PI / 180;
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    for (let index = 0; index < pixels.length; index += 4) {
+      const red = pixels[index];
+      const green = pixels[index + 1];
+      const blue = pixels[index + 2];
+      const y = luma(red, green, blue);
+      const u = -0.147 * red - 0.289 * green + 0.436 * blue;
+      const v = 0.615 * red - 0.515 * green - 0.1 * blue;
+      const rotatedU = (u * cosine - v * sine) * saturation;
+      const rotatedV = (u * sine + v * cosine) * saturation;
+      const base = (y - 128) * contrast + 128 + lift;
+      pixels[index] = clampByte((base + 1.14 * rotatedV) * gain);
+      pixels[index + 1] = clampByte((base - 0.395 * rotatedU - 0.581 * rotatedV + warmth) * gain);
+      pixels[index + 2] = clampByte((base + 2.033 * rotatedU) * gain);
+    }
+  });
+}
+
+// Blend a dark-to-light duotone over each source pixel.
+export function applyDuotone(data, settings = {}) {
+  const dark = parseColor(settings.dark, "16102b");
+  const light = parseColor(settings.light, "ffd27a");
+  const amount = numberOption(settings.amount, 1, 0, 1);
+  return cached(data, { dark, light, amount }, (image) => {
+    for (let index = 0; index < image.data.length; index += 4) {
+      const tone = luma(image.data[index], image.data[index + 1], image.data[index + 2]) / 255;
+      for (let channel = 0; channel < 3; channel += 1) {
+        const target = dark[channel] + (light[channel] - dark[channel]) * tone;
+        image.data[index + channel] = clampByte(image.data[index + channel] * (1 - amount) + target * amount);
+      }
+    }
+  });
+}
+
+// Quantize each colour channel to a bounded number of levels.
+export function applyPosterize(data, settings = {}) {
+  const levels = Math.round(numberOption(settings.levels, 6, 2, 32));
+  return cached(data, { levels }, (image) => {
+    const step = 255 / (levels - 1);
+    for (let index = 0; index < image.data.length; index += 4) {
+      for (let channel = 0; channel < 3; channel += 1) {
+        image.data[index + channel] = clampByte(Math.round(image.data[index + channel] / step) * step);
+      }
+    }
+  });
+}
+
+// Render luminance-driven monochrome halftone dots.
+export function applyHalftone(data, settings = {}) {
+  const cell = Math.round(numberOption(settings.cell, 8, 2, 64));
+  const angle = numberOption(settings.angle, 0, -360, 360) * Math.PI / 180;
+  return cached(data, { cell, angle }, (image) => {
+    const source = new Uint8ClampedArray(image.data);
+    const cosine = Math.cos(angle);
+    const sine = Math.sin(angle);
+    for (let top = 0; top < image.height; top += cell) {
+      for (let left = 0; left < image.width; left += cell) {
+        const cx = Math.min(image.width - 1, left + Math.floor(cell / 2));
+        const cy = Math.min(image.height - 1, top + Math.floor(cell / 2));
+        const sample = (cy * image.width + cx) * 4;
+        const radius = cell * 0.48 * Math.sqrt(1 - luma(source[sample], source[sample + 1], source[sample + 2]) / 255);
+        for (let y = top; y < Math.min(image.height, top + cell); y += 1) {
+          for (let x = left; x < Math.min(image.width, left + cell); x += 1) {
+            const dx = x - cx;
+            const dy = y - cy;
+            const rx = dx * cosine - dy * sine;
+            const ry = dx * sine + dy * cosine;
+            if (rx * rx + ry * ry > radius * radius) {
+              const pixel = (y * image.width + x) * 4;
+              image.data[pixel] = 255;
+              image.data[pixel + 1] = 255;
+              image.data[pixel + 2] = 255;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Darken regularly spaced horizontal scanline rows.
+export function applyScanlines(data, settings = {}) {
+  const period = Math.round(numberOption(settings.period, 3, 1, 64));
+  const alpha = numberOption(settings.alpha, 0.2, 0, 1);
+  return cached(data, { period, alpha }, (image) => {
+    for (let y = 0; y < image.height; y += period) {
+      for (let x = 0; x < image.width; x += 1) {
+        const index = (y * image.width + x) * 4;
+        for (let channel = 0; channel < 3; channel += 1) {
+          image.data[index + channel] = clampByte(image.data[index + channel] * (1 - alpha));
+        }
+      }
+    }
+  });
+}
+
+// Add repeatable seeded luminance noise.
+export function applyGrain(data, settings = {}) {
+  const amount = numberOption(settings.amount, 12, 0, 100);
+  const seed = Math.floor(numberOption(settings.seed, 1, 0, 0xffffffff)) >>> 0;
+  return cached(data, { amount, seed }, (image) => {
+    let random = seed;
+    for (let index = 0; index < image.data.length; index += 4) {
+      random = (Math.imul(random, 1664525) + 1013904223) >>> 0;
+      const noise = ((random >>> 24) / 255 - 0.5) * amount;
+      for (let channel = 0; channel < 3; channel += 1) {
+        image.data[index + channel] = clampByte(image.data[index + channel] + noise);
+      }
+    }
+  });
+}
+
+// Offset red and blue channels in opposite horizontal directions.
+export function applyChromatic(data, settings = {}) {
+  const offset = Math.round(numberOption(settings.offset, 2, 0, 32));
+  return cached(data, { offset }, (image) => {
+    const source = new Uint8ClampedArray(image.data);
+    for (let y = 0; y < image.height; y += 1) {
+      for (let x = 0; x < image.width; x += 1) {
+        const pixel = (y * image.width + x) * 4;
+        const left = (y * image.width + Math.max(0, x - offset)) * 4;
+        const right = (y * image.width + Math.min(image.width - 1, x + offset)) * 4;
+        image.data[pixel] = source[left];
+        image.data[pixel + 2] = source[right + 2];
+      }
+    }
+  });
+}
+
+// Apply a radial edge darkening effect.
+export function applyVignette(data, settings = {}) {
+  const amount = numberOption(settings.amount, 0.5, 0, 1);
+  return cached(data, { amount }, (image) => {
+    for (let y = 0; y < image.height; y += 1) {
+      for (let x = 0; x < image.width; x += 1) {
+        const radius = Math.hypot((x - image.width / 2) / (image.width / 2), (y - image.height / 2) / (image.height / 2));
+        const multiplier = Math.max(0, 1 - amount * Math.max(0, radius - 0.25));
+        const index = (y * image.width + x) * 4;
+        for (let channel = 0; channel < 3; channel += 1) {
+          image.data[index + channel] = clampByte(image.data[index + channel] * multiplier);
+        }
+      }
+    }
+  });
+}
+
+// Blend a coloured light leak fading from the selected side.
+export function applyLightLeak(data, settings = {}) {
+  const rgb = parseColor(settings.colour, "ff5588");
+  const amount = numberOption(settings.amount, 0.3, 0, 1);
+  const from = settings.from === "right" ? "right" : "left";
+  return cached(data, { rgb, amount, from }, (image) => {
+    for (let y = 0; y < image.height; y += 1) {
+      for (let x = 0; x < image.width; x += 1) {
+        const horizontal = from === "right" ? image.width - 1 - x : x;
+        const blend = horizontal / Math.max(1, image.width) * (1 - y / Math.max(1, image.height)) * amount;
+        const index = (y * image.width + x) * 4;
+        for (let channel = 0; channel < 3; channel += 1) {
+          image.data[index + channel] = clampByte(image.data[index + channel] * (1 - blend) + rgb[channel] * blend);
+        }
+      }
+    }
+  });
+}
+
+const filters = {
+  grade: applyGrade,
+  duotone: applyDuotone,
+  posterize: applyPosterize,
+  halftone: applyHalftone,
+  scanlines: applyScanlines,
+  grain: applyGrain,
+  chromatic: applyChromatic,
+  vignette: applyVignette,
+  lightLeak: applyLightLeak,
+};
+
+// Execute filters in order and reject unsupported stage names.
+export function runPipeline(data, stages = []) {
+  for (const stage of stages) {
+    const filter = filters[stage.name];
+    if (!filter) throw new Error(`Unknown filter: ${stage.name}`);
+    data = filter(data, stage.options || {});
+  }
+  return data;
+}

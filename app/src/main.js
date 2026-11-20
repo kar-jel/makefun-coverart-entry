@@ -16,14 +16,15 @@ import {
 import { drawPoster } from "./render.js";
 import { bindControls } from "./controls.js";
 import { exportPng, renderPngDataUrl } from "./export.js";
-import { applyGrade } from "./filters.js";
-import { drawLayers } from "./layers.js";
 import { defaultLayers } from "./layers.js";
 import { createHistory } from "./history.js";
-import { listPresets, savePreset, randomPreset } from "./presets.js";
-window.makefunModules={filters:["applyGrade"],layers:["drawLayers"],history:["createHistory"],presets:["listPresets","savePreset","randomPreset"]};
-window.makefunHistory=createHistory();
-state.layers=structuredClone(defaultLayers);
+import { listPresets } from "./presets.js";
+import { runPipeline } from "./filters.js";
+import { drawLayers } from "./layers.js";
+window.makefunFilterPipeline = runPipeline;
+window.makefunModules = { filters: ["applyGrade", "runPipeline", "cacheKey", "clearCache", "cacheStats"], layers: ["defaultLayers", "addLayer", "removeLayer", "move", "hitTest", "drawLayers"], history: ["createHistory", "push", "undo", "redo", "canUndo", "canRedo", "clear", "describe"], presets: ["listPresets", "savePreset", "loadPreset", "deletePreset", "randomPreset"] };
+window.makefunHistory = createHistory(60);
+state.layers = defaultLayers();
 const canvas = document.querySelector("#poster"),
   ctx = canvas.getContext("2d");
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -50,7 +51,7 @@ function fitCanvas() {
 function render() {
   if (!ctx) return;
   drawPoster(ctx, canvas.width, canvas.height, state);
-  drawLayers(ctx,canvas.width,canvas.height,state.layers);
+  drawLayers(ctx, canvas.width, canvas.height, state.layers);
 }
 function toast(s) {
   const e = document.querySelector("#toast");
