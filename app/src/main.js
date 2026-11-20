@@ -16,6 +16,14 @@ import {
 import { drawPoster } from "./render.js";
 import { bindControls } from "./controls.js";
 import { exportPng, renderPngDataUrl } from "./export.js";
+import { applyGrade } from "./filters.js";
+import { drawLayers } from "./layers.js";
+import { defaultLayers } from "./layers.js";
+import { createHistory } from "./history.js";
+import { listPresets, savePreset, randomPreset } from "./presets.js";
+window.makefunModules={filters:["applyGrade"],layers:["drawLayers"],history:["createHistory"],presets:["listPresets","savePreset","randomPreset"]};
+window.makefunHistory=createHistory();
+state.layers=structuredClone(defaultLayers);
 const canvas = document.querySelector("#poster"),
   ctx = canvas.getContext("2d");
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -42,6 +50,7 @@ function fitCanvas() {
 function render() {
   if (!ctx) return;
   drawPoster(ctx, canvas.width, canvas.height, state);
+  drawLayers(ctx,canvas.width,canvas.height,state.layers);
 }
 function toast(s) {
   const e = document.querySelector("#toast");
@@ -161,6 +170,7 @@ function syncInputs() {
   sync();
 }
 const api = {
+  fitCanvas,
   state,
   render,
   toast,
@@ -187,7 +197,7 @@ const api = {
 };
 // Automated screenshots use this hook to verify PNG export sizes.
 window.makefunExport = (sizeKey) =>
-  renderPngDataUrl(sizeKey, state, drawPoster);
+  renderPngDataUrl(sizeKey, state, (c,w,h,s)=>{drawPoster(c,w,h,s);drawLayers(c,w,h,s.layers)});
 
 bindControls(api);
 document.querySelector("#download").onclick = () =>

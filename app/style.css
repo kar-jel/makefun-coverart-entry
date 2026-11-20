@@ -1,3 +1,5 @@
+/* feature controls */
+.editor-tabs{display:flex;gap:2px;margin:8px 0}.editor-tabs button,.historybar button,.preset-chip{background:#222329;border:1px solid #393a42;color:#ccc;padding:6px 5px;border-radius:3px;font-size:9px;cursor:pointer}.editor-tabs button{flex:1}.editor-tabs button.active{border-color:#ff638e;color:#fff}.historybar{display:flex;gap:5px;margin-bottom:8px}.historybar button:disabled{opacity:.4}.preset-strip{display:flex;gap:4px;overflow:auto;padding:4px 0}.preset-chip{white-space:nowrap}[data-pane-content][hidden]{display:none!important}
 @font-face {
   font-family: Anton;
   src: url("fonts/Anton.ttf") format("truetype");

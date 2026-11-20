@@ -26,7 +26,8 @@
           <h1>Make a cover<br />worth <em>keeping.</em></h1>
           <p>Drop a photo. Set the scene. Make it yours.</p>
         </div>
-        <section class="block photos">
+        <div class="blocktitle"><span>EDITOR</span></div><nav id="editorTabs" class="editor-tabs"><button data-pane="photos" class="active">PHOTO</button><button data-pane="look">GRADE</button><button data-pane="type">TYPE</button><button data-pane="layers">LAYERS</button><button data-pane="presets">PRESETS</button></nav><div class="historybar"><button id="undo" disabled>↶ Undo</button><button id="redo" disabled>↷ Redo</button></div><div id="presetStrip" class="preset-strip"></div><button id="savePreset" class="textbtn">＋ SAVE PRESET</button><button id="randomPreset" class="textbtn">⤨ RANDOM</button>
+        <section class="block photos" data-pane-content="photos">
           <div class="blocktitle">
             <span>01 / YOUR PHOTOS</span
             ><button id="samples" class="textbtn">USE A SAMPLE ↗</button><button id="vary" class="textbtn">VARY ↻</button>
@@ -45,7 +46,7 @@
             Select a panel in the poster. Drag to frame it.
           </div>
         </section>
-        <section class="block">
+        <section class="block" data-pane-content="photos">
           <div class="blocktitle"><span>02 / COMPOSITION</span></div>
           <div class="seg" id="layouts"></div>
           <div class="row">
@@ -62,9 +63,9 @@
             ><input id="zoom" type="range" min="1" max="3" step=".01" value="1"
           /></label>
         </section>
-        <section class="block">
+        <section class="block" data-pane-content="look">
           <div class="blocktitle">
-            <span>03 / THE LOOK</span
+            <span>03 / THE LOOK</span>
             ><button id="random" class="textbtn">⤨ RANDOMISE</button>
           </div>
           <div id="looks" class="lookgrid"></div>
@@ -113,7 +114,7 @@
           <label class="check"><input id="decor" type="checkbox" checked /> Add sunset / skyline artwork</label>
           <label class="sliderlabel">INK <output id="inkOut">70</output><input id="ink" type="range" min="0" max="100" value="70" /></label>
         </section>
-        <section class="block captionblock">
+        <section class="block captionblock" data-pane-content="type">
           <div class="blocktitle"><span>04 / THE HEADLINE</span></div>
           <input
             id="caption"
@@ -160,6 +161,7 @@
             /></label>
           </div>
         </section>
+        <section class="block" data-pane-content="layers"><div class="blocktitle"><span>05 / LAYERS</span></div><div id="layerList"></div><label class="sliderlabel">ROTATION <input id="layerRotate" type="range" min="-180" max="180" value="0"></label></section><section class="block" data-pane-content="presets"><div class="blocktitle"><span>06 / PRESETS</span></div><div id="presetLibrary"></div></section>
         <section class="block finalrow">
           <label>EXPORT SIZE<select id="size"></select></label
           ><button id="download" class="download">↓ &nbsp; DOWNLOAD PNG</button

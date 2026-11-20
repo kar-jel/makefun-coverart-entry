@@ -1,11 +1,5 @@
-import {
-  LAYOUTS,
-  GRADES,
-  LETTERING,
-  LOOKS,
-  SIZES,
-  resetState,
-} from "./state.js";
+import {listPresets,savePreset,randomPreset} from "./presets.js";
+import { LAYOUTS, GRADES, LETTERING, LOOKS, SIZES, resetState } from "./state.js";
 import { resetCrop, refreshPhotoList, fitPanels } from "./photos.js";
 export function bindControls(api) {
   const s = api.state,
@@ -37,14 +31,21 @@ export function bindControls(api) {
         return o;
       }),
     );
+  el("editorTabs").onclick=e=>{const b=e.target.closest("button[data-pane]");if(!b)return;document.querySelectorAll("[data-pane-content]").forEach(x=>x.hidden=x.dataset.paneContent!==b.dataset.pane);document.querySelectorAll("#editorTabs button").forEach(x=>x.classList.toggle("active",x===b))};
   el("layouts").onclick = (e) => {
     if (e.target.dataset.key) api.setLayout(e.target.dataset.key);
   };
+  const presetRefresh=()=>{const host=el("presetStrip");host.replaceChildren();for(const p of listPresets()){const b=document.createElement("button");b.className="preset-chip";b.textContent=p.label||p.name;b.onclick=()=>{api.setLook(p.grade||"neon");s.caption=p.caption||s.caption;el("caption").value=s.caption;api.render()};host.append(b)}};presetRefresh();el("savePreset").onclick=()=>{savePreset({name:`My ${new Date().toLocaleTimeString()}`,grade:s.grade,lettering:s.lettering,decor:s.decor,caption:s.caption});presetRefresh()};el("randomPreset").onclick=()=>{const p=randomPreset();api.setLook(p.grade);s.caption=p.caption;el("caption").value=s.caption;api.render()};
+  const presetLib=el("presetLibrary");for(const p of listPresets()){const b=document.createElement("button");b.className="preset-chip";b.textContent=p.label||p.name;b.onclick=()=>{api.setLook(p.grade||"neon");s.caption=p.caption||s.caption;el("caption").value=s.caption;api.render()};presetLib.append(b)}
+  const layerHost=el("layerList");const drawLayerList=()=>{layerHost.replaceChildren();s.layers.forEach((l,i)=>{const row=document.createElement("label");row.className="check";const cb=document.createElement("input");cb.type="checkbox";cb.checked=l.visible;cb.onchange=()=>{l.visible=cb.checked;api.render()};row.append(cb,document.createTextNode(l.name));layerHost.append(row)})};drawLayerList();el("layerRotate").oninput=e=>{const l=s.layers.find(x=>!x.locked&&x.type==="text"&&x.visible);if(l){l.rotation=Number(e.target.value);api.render()}};
+  const hist=window.makefunHistory;const histButtons=()=>{el("undo").disabled=!hist.canUndo();el("redo").disabled=!hist.canRedo()};const checkpoint=()=>{hist.push({layout:s.layout,size:s.size,caption:s.caption,grade:s.grade,lettering:s.lettering,decor:s.decor,hue:s.hue,saturation:s.saturation,contrast:s.contrast,warmth:s.warmth,vignette:s.vignette,capSize:s.capSize,spacing:s.spacing,outline:s.outline,shadow:s.shadow,capY:s.capY,crops:s.crops,layers:s.layers})};const restore=o=>{Object.assign(s,o);api.syncInputs();drawLayerList();api.render();histButtons()};el("undo").onclick=()=>{const o=hist.undo({layout:s.layout,size:s.size,caption:s.caption,grade:s.grade,lettering:s.lettering,decor:s.decor,hue:s.hue,saturation:s.saturation,contrast:s.contrast,warmth:s.warmth,vignette:s.vignette,capSize:s.capSize,spacing:s.spacing,outline:s.outline,shadow:s.shadow,capY:s.capY,crops:s.crops,layers:s.layers});restore(o)};el("redo").onclick=()=>{const o=hist.redo({layout:s.layout,size:s.size,caption:s.caption,grade:s.grade,lettering:s.lettering,decor:s.decor,hue:s.hue,saturation:s.saturation,contrast:s.contrast,warmth:s.warmth,vignette:s.vignette,capSize:s.capSize,spacing:s.spacing,outline:s.outline,shadow:s.shadow,capY:s.capY,crops:s.crops,layers:s.layers});restore(o)};
+  el("layouts").onclick = (e) => { if (e.target.dataset.key) api.setLayout(e.target.dataset.key); };
   el("looks").onclick = (e) => {
     if (e.target.dataset.key) api.setLook(e.target.dataset.key);
   };
   const bind = (id, key, change = () => {}) =>
     el(id).addEventListener("input", (e) => {
+      checkpoint();
       s[key] =
         e.target.type === "checkbox"
           ? e.target.checked
