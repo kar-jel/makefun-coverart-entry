@@ -68,7 +68,7 @@ function posterizePanel(ctx, x, y, w, h, state, img, crop) {
   if (!state.ink || !img) return;
   const levels=Math.max(2,Math.round(state.inkLevels||9)); let map=inkCache.get(img); if(!map)inkCache.set(img,map=new Map());
   const key=[crop.x,crop.y,crop.zoom,crop.rotate,crop.flip,state.grade,state.hue,state.saturation,state.contrast,state.warmth,state.vignette,levels,w,h].join(":"); let canvas=map.get(key);
-  if(!canvas){canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(w));canvas.height=Math.max(1,Math.round(h));const q=canvas.getContext("2d",{willReadFrequently:true});coverImage(q,img,0,0,canvas.width,canvas.height,crop);q.filter=`hue-rotate(${state.hue}deg) saturate(${state.saturation}%) contrast(${state.contrast}%)`;q.globalCompositeOperation="source-atop";q.fillStyle=`rgba(255,${150+state.warmth},95,.12)`;q.fillRect(0,0,canvas.width,canvas.height);q.filter="none";q.globalCompositeOperation="source-over";drawGrade(q,0,0,canvas.width,canvas.height,state);const im=q.getImageData(0,0,canvas.width,canvas.height),step=255/(levels-1);for(let i=0;i<im.data.length;i+=4)for(let k=0;k<3;k++)im.data[i+k]=Math.round(im.data[i+k]/step)*step;q.putImageData(im,0,0);map.set(key,canvas);if(map.size>8)map.delete(map.keys().next().value);}
+  if(!canvas){canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(w));canvas.height=Math.max(1,Math.round(h));const q=canvas.getContext("2d",{willReadFrequently:true});coverImage(q,img,0,0,canvas.width,canvas.height,crop);q.filter=`hue-rotate(${state.hue}deg) saturate(${state.saturation}%) contrast(${state.contrast}%)`;q.globalCompositeOperation="source-atop";q.fillStyle=`rgba(255,${150+state.warmth},95,.12)`;q.fillRect(0,0,canvas.width,canvas.height);q.filter="none";q.globalCompositeOperation="source-over";drawGrade(q,0,0,canvas.width,canvas.height,state);const im=q.getImageData(0,0,canvas.width,canvas.height),step=255/(levels-1);for(let i=0;i<im.data.length;i+=4)for(let k=0;k<3;k++)im.data[i+k]=Math.round(im.data[i+k]/step)*step;q.putImageData(im,0,0);runPipeline(q.getImageData(0,0,canvas.width,canvas.height),[{name:"halftone",options:{cell:9,angle:18}}]);const dots=q.getImageData(0,0,canvas.width,canvas.height);for(let i=0;i<dots.data.length;i+=4){if(dots.data[i]===255&&dots.data[i+1]===255&&dots.data[i+2]===255){dots.data[i]=im.data[i];dots.data[i+1]=im.data[i+1];dots.data[i+2]=im.data[i+2];}}q.putImageData(dots,0,0);map.set(key,canvas);if(map.size>8)map.delete(map.keys().next().value);}
   ctx.drawImage(canvas,x,y,w,h);
 }
 function drawInk(ctx,x,y,w,h,amount=70){if(!amount)return;const a=amount/100;ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();const sw=Math.max(1,Math.round(w/2)),shalf=Math.max(1,Math.round(h/2)),c=document.createElement("canvas");c.width=sw;c.height=shalf;const q=c.getContext("2d",{willReadFrequently:true});q.drawImage(ctx.canvas,x,y,w,h,0,0,sw,shalf);const src=q.getImageData(0,0,sw,shalf),d=src.data,lum=new Float32Array(sw*shalf);for(let i=0;i<lum.length;i++)lum[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];const edges=q.createImageData(sw,shalf);for(let yy=1;yy<shalf-1;yy++)for(let xx=1;xx<sw-1;xx++){const i=yy*sw+xx,gx=-lum[i-sw-1]+lum[i-sw+1]-2*lum[i-1]+2*lum[i+1]-lum[i+sw-1]+lum[i+sw+1],gy=-lum[i-sw-1]-2*lum[i-sw]-lum[i-sw+1]+lum[i+sw-1]+2*lum[i+sw]+lum[i+sw+1],j=i*4;edges.data[j]=14;edges.data[j+1]=8;edges.data[j+2]=32;edges.data[j+3]=Math.hypot(gx,gy)>210?255:0;}q.putImageData(edges,0,0);ctx.globalAlpha=.55*a;ctx.drawImage(c,x,y,w,h);ctx.globalAlpha=1;ctx.globalCompositeOperation="screen";ctx.globalAlpha=.85*a;ctx.strokeStyle="#48efff";ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x,y+1);ctx.lineTo(x+w,y+1);ctx.moveTo(x+1,y);ctx.lineTo(x+1,y+h);ctx.stroke();ctx.globalCompositeOperation="multiply";ctx.globalAlpha=.5*a;const sh=ctx.createLinearGradient(0,y+h*.67,0,y+h);sh.addColorStop(0,"rgba(45,15,96,0)");sh.addColorStop(1,"rgba(45,15,96,.92)");ctx.fillStyle=sh;ctx.fillRect(x,y+h*.67,w,h*.33);ctx.restore();ctx.globalCompositeOperation="source-over";ctx.globalAlpha=1;}
@@ -112,20 +112,20 @@ export function drawLockup(ctx, w, h, layout = "cover") {
   }
   const blockW = w * 0.70, x = (w - blockW) / 2;
   const glow = ctx.createRadialGradient(w/2, h*.12, 0, w/2, h*.12, blockW*.6);
-  glow.addColorStop(0, "rgba(255,36,165,.28)"); glow.addColorStop(1, "rgba(255,36,165,0)");
+  glow.addColorStop(0, "rgba(255,36,165,.16)"); glow.addColorStop(1, "rgba(255,36,165,0)");
   ctx.fillStyle = glow; ctx.fillRect(x, top, blockW, bottom-top);
   const base = h * 0.115;
   ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
   const title = ctx.createLinearGradient(0, h*.045, 0, h*.145);
   title.addColorStop(0, "#ffffff"); title.addColorStop(.48, "#c8d0dc"); title.addColorStop(1, "#ff55c8");
   ctx.font = `${h*.105}px Anton,Impact,sans-serif`;
-  ctx.lineWidth = h*.004; ctx.strokeStyle = "#100d20"; ctx.shadowColor="#ff3fc1"; ctx.shadowBlur=h*.018;
+  ctx.lineWidth = h*.004; ctx.strokeStyle = "#100d20"; ctx.shadowColor="#ff3fc1"; ctx.shadowBlur=h*.006;
   ctx.strokeText("VICE FRAME", w/2, base);
   ctx.fillStyle=title; ctx.fillText("VICE FRAME", w/2, base);
-  ctx.shadowBlur=0; ctx.lineWidth=h*.002; ctx.strokeStyle="#4beeff"; ctx.strokeText("VICE FRAME",w/2,base);
+  ctx.shadowBlur=0;
   const subY=h*.165;
   ctx.strokeStyle="#ff5bd1";ctx.lineWidth=h*.0012;ctx.beginPath();ctx.moveTo(w*.26,subY-h*.017);ctx.lineTo(w*.74,subY-h*.017);ctx.moveTo(w*.26,subY+h*.017);ctx.lineTo(w*.74,subY+h*.017);ctx.stroke();
-  ctx.font=`${h*.023}px Anton,Impact,sans-serif`;ctx.fillStyle="#f7f2ff";ctx.letterSpacing=`${h*.008}px`;ctx.fillText("ORIGINAL CITY STORIES",w/2,subY);
+  ctx.font=`${h*.023}px Anton,Impact,sans-serif`;ctx.fillStyle="#f7f2ff";ctx.letterSpacing="0px";ctx.fillText("ORIGINAL CITY STORIES",w/2,subY);
   const bx=w*.82, by=h*.075, bw=w*.105,bh=h*.12;
   ctx.beginPath();ctx.roundRect(bx,by,bw,bh,h*.018);ctx.fillStyle="rgba(18,12,35,.9)";ctx.fill();ctx.lineWidth=h*.003;ctx.strokeStyle="#55edff";ctx.stroke();
   ctx.font=`${h*.071}px Anton,Impact,sans-serif`;ctx.fillStyle=title;ctx.fillText("17",bx+bw/2,by+bh/2);
@@ -191,7 +191,7 @@ export function drawBottomBar(ctx, w, h, y) {
   ctx.font = `700 ${h * 0.012}px Arial`;
   ctx.textAlign = "left";
   ctx.fillText(
-    "VICE//FRAME  ·  ORIGINAL CITY STORIES",
+    "VICE FRAME  ·  ORIGINAL CITY STORIES",
     w * 0.04,
     h - bh * 0.38,
   );
@@ -209,9 +209,11 @@ export function drawPanel(ctx, w, h, state, index) {
     y = p.y * h,
     pw = p.w * w,
     ph = p.h * h,
-    c = state.crops[index] || { photo: 0, x: 0, y: 0, zoom: 1, rotate: 0 };
+    sourceCrop = state.crops[index] || { photo: 0, x: 0, y: 0, zoom: 1, rotate: 0 },
+    c = { ...sourceCrop, rotate: (sourceCrop.rotate || 0) + (p.rotate || 0) };
   ctx.save();
-  ctx.fillStyle = "#fff0ce";
+  // A continuous dark ground replaces white gutters; panels overlap as cutouts.
+  ctx.fillStyle = "#090d1b";
   ctx.fillRect(x - 2, y - 2, pw + 4, ph + 4);
   const photo=state.photos[c.photo] || state.photos[0];
   if (state.ink) posterizePanel(ctx,x,y,pw,ph,state,photo,c); else coverImage(ctx,photo,x,y,pw,ph,c);
@@ -238,18 +240,22 @@ export function drawPanel(ctx, w, h, state, index) {
   ctx.globalAlpha=.08; ctx.fillStyle="#65efff";
   for(let sy=y;sy<y+ph;sy+=Math.max(3,h*.004)) ctx.fillRect(x,sy,pw,Math.max(1,h*.0006));
   ctx.restore();
-  ctx.strokeStyle = "rgba(255,244,218,.68)";
+  ctx.strokeStyle = "rgba(73,238,255,.72)";
   ctx.lineWidth = Math.max(1, h * 0.0018);
   ctx.strokeRect(x, y, pw, ph);
   ctx.restore();
 }
 export function drawPoster(ctx, w, h, state) {
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = "#171124";
+  ctx.fillStyle = "#070b18";
   ctx.fillRect(0, 0, w, h);
+  const atmosphere=ctx.createLinearGradient(0,0,w,h);
+  atmosphere.addColorStop(0,"#10283d"); atmosphere.addColorStop(.42,"#102346"); atmosphere.addColorStop(.68,"#45163c"); atmosphere.addColorStop(1,"#f05a2a");
+  ctx.globalAlpha=.65; ctx.fillStyle=atmosphere; ctx.fillRect(0,0,w,h); ctx.globalAlpha=1;
   const lay = LAYOUTS[state.layout];
   for (let i = 0; i < lay.panels.length; i++) drawPanel(ctx, w, h, state, i);
-  if (state.decor) drawDecoration(ctx, 0, 0, w, h);
+  // Decorative sun artwork remains an option; avoid covering the photos in the default collage.
+  if (state.decor && state.layout === "single") drawDecoration(ctx, 0, 0, w, h);
   drawLockup(ctx, w, h, state.layout);
   const y = drawCaption(ctx, w, h, state);
   drawBottomBar(ctx, w, h, y);

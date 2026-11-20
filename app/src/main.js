@@ -25,6 +25,35 @@ window.makefunFilterPipeline = runPipeline;
 window.makefunModules = { filters: ["applyGrade", "runPipeline", "cacheKey", "clearCache", "cacheStats"], layers: ["defaultLayers", "addLayer", "removeLayer", "move", "hitTest", "drawLayers"], history: ["createHistory", "push", "undo", "redo", "canUndo", "canRedo", "clear", "describe"], presets: ["listPresets", "savePreset", "loadPreset", "deletePreset", "randomPreset"] };
 window.makefunHistory = createHistory(60);
 state.layers = defaultLayers();
+state.layers.find((layer) => layer.name === "VICE FRAME").visible = false;
+state.layers.find((layer) => layer.name === "Credit").visible = false;
+// Bind the editable headline layer to the same default caption as the painted lockup.
+state.layers.find((layer) => layer.name === "Caption").visible = false;
+state.layers.find((layer) => layer.name === "COMING SOON").visible = false;
+// Ensure one-click reset also starts from the clean art-directed defaults.
+const resetButton = document.querySelector("#resetAll");
+resetButton.addEventListener("click", () => {
+  state.layers = defaultLayers();
+  for (const name of ["VICE FRAME", "Credit", "Caption", "COMING SOON"]) {
+    const layer = state.layers.find((item) => item.name === name);
+    if (layer) layer.visible = false;
+  }
+  setLayout(state.layout);
+  syncInputs();
+  render();
+});
+// Ensure one-click reset also starts from the clean art-directed defaults.
+const resetButton = document.querySelector("#resetAll");
+resetButton.addEventListener("click", () => {
+  state.layers = defaultLayers();
+  for (const name of ["VICE FRAME", "Credit", "Caption", "COMING SOON"]) {
+    const layer = state.layers.find((item) => item.name === name);
+    if (layer) layer.visible = false;
+  }
+  setLayout(state.layout);
+  syncInputs();
+  render();
+});
 const canvas = document.querySelector("#poster"),
   ctx = canvas.getContext("2d");
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
