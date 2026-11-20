@@ -216,9 +216,9 @@ fitCanvas();
   const valid = loaded.filter(Boolean);
   state.crops = valid.map((img, i) => ({
     photo: i,
-    x: (img._samplePosition?.[0] ?? 0.5) - 0.5,
-    y: (img._samplePosition?.[1] ?? 0.5) - 0.5,
-    zoom: img._sampleZoom || 1,
+    x: [0, -0.08, 0.08][i] ?? 0,
+    y: [0, -0.07, 0.08][i] ?? 0,
+    zoom: [1, 1.08, 1.12][i] ?? 1,
     rotate: 0,
     flip: false,
   }));

@@ -65,7 +65,7 @@ export function drawGrade(ctx, x, y, w, h, state) {
 const inkCache = new WeakMap();
 function posterizePanel(ctx, x, y, w, h, state, img, crop) {
   if (!state.ink || !img) return;
-  const levels=Math.max(2,Math.round(state.inkLevels||5)); let map=inkCache.get(img); if(!map)inkCache.set(img,map=new Map());
+  const levels=Math.max(2,Math.round(state.inkLevels||9)); let map=inkCache.get(img); if(!map)inkCache.set(img,map=new Map());
   const key=[crop.x,crop.y,crop.zoom,crop.rotate,crop.flip,state.grade,state.hue,state.saturation,state.contrast,state.warmth,state.vignette,levels,w,h].join(":"); let canvas=map.get(key);
   if(!canvas){canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(w));canvas.height=Math.max(1,Math.round(h));const q=canvas.getContext("2d",{willReadFrequently:true});coverImage(q,img,0,0,canvas.width,canvas.height,crop);q.filter=`hue-rotate(${state.hue}deg) saturate(${state.saturation}%) contrast(${state.contrast}%)`;q.globalCompositeOperation="source-atop";q.fillStyle=`rgba(255,${150+state.warmth},95,.12)`;q.fillRect(0,0,canvas.width,canvas.height);q.filter="none";q.globalCompositeOperation="source-over";drawGrade(q,0,0,canvas.width,canvas.height,state);const im=q.getImageData(0,0,canvas.width,canvas.height),step=255/(levels-1);for(let i=0;i<im.data.length;i+=4)for(let k=0;k<3;k++)im.data[i+k]=Math.round(im.data[i+k]/step)*step;q.putImageData(im,0,0);map.set(key,canvas);if(map.size>8)map.delete(map.keys().next().value);}
   ctx.drawImage(canvas,x,y,w,h);
@@ -96,34 +96,7 @@ export function drawDecoration(ctx, x, y, w, h) {
   for (let i = 0; i < 7; i++)
     ctx.fillRect(x + w * 0.58, y + h * (0.31 + i * 0.045), w * 0.4, h * 0.018);
   ctx.restore();
-  ctx.fillStyle = "rgba(17,16,34,.68)";
-  ctx.beginPath();
-  ctx.moveTo(x, y + h * 0.83);
-  for (let i = 0; i <= 8; i++) {
-    const xx = x + (i * w) / 8;
-    ctx.lineTo(xx, y + h * (0.72 + Math.sin(i * 4) * 0.06));
-    ctx.lineTo(xx, y + h * 0.88);
-  }
-  ctx.lineTo(x + w, y + h);
-  ctx.lineTo(x, y + h);
-  ctx.fill();
-  ctx.globalAlpha = 0.9;
-  for (let i = 0; i < 7; i++) {
-    const bx = x + w * (0.08 + i * 0.13),
-      bh = h * (0.08 + (i % 3) * 0.035);
-    ctx.fillStyle = "rgba(18,16,39,.82)";
-    ctx.fillRect(bx, y + h * 0.81 - bh, w * 0.065, bh);
-    for (let q = 0; q < 4; q++) {
-      ctx.fillStyle = i % 2 ? "#ffc45c" : "#50dce0";
-      ctx.globalAlpha = 0.7;
-      ctx.fillRect(
-        bx + w * 0.012 + q * w * 0.014,
-        y + h * 0.82 - bh + (q % 2) * h * 0.02,
-        w * 0.006,
-        h * 0.012,
-      );
-    }
-  }
+  // No city/UI silhouettes: preserve the source panel imagery.
   ctx.restore();
 }
 export function drawLockup(ctx, w, h, layout = "cover") {
