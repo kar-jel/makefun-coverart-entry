@@ -149,6 +149,26 @@ export function drawCaption(ctx, w, h, s) {
   const chars = [...text];
   let measured = ctx.measureText(text).width + spacing * (chars.length - 1),
     scale = Math.min(1, max / measured);
+  // A soft dark plaque keeps the caption readable where it crosses bright photo detail.
+  {
+    const px = w / 2 - (measured * scale) / 2 - size * 0.24,
+      pw2 = measured * scale + size * 0.48,
+      ph2 = size * 1.38,
+      plaque = ctx.createLinearGradient(0, y - ph2 / 2, 0, y + ph2 / 2);
+    plaque.addColorStop(0, "rgba(9,7,22,0)");
+    plaque.addColorStop(0.2, "rgba(9,7,22,.82)");
+    plaque.addColorStop(0.8, "rgba(9,7,22,.82)");
+    plaque.addColorStop(1, "rgba(9,7,22,0)");
+    ctx.save();
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.fillStyle = plaque;
+    ctx.beginPath();
+    ctx.roundRect(px, y - ph2 / 2, pw2, ph2, size * 0.18);
+    ctx.fill();
+    ctx.restore();
+  }
   ctx.translate(w / 2, y);
   ctx.scale(scale, scale);
   ctx.translate(-w / 2, -y);
@@ -208,9 +228,10 @@ export function drawPanel(ctx, w, h, state, index) {
     x = p.x * w,
     y = p.y * h,
     pw = p.w * w,
-    ph = p.h * h,
+    ph = p.h * h;
   const sourceCrop = state.crops[index] || { photo: 0, x: 0, y: 0, zoom: 1, rotate: 0 };
   const c = { ...sourceCrop, rotate: sourceCrop.rotate || 0, panelRotate: p.rotate || 0 };
+  const photo = state.photos[c.photo] || state.photos[0];
   ctx.save();
   if (c.panelRotate) {
     ctx.save(); ctx.translate(x+pw/2,y+ph/2); ctx.rotate(c.panelRotate*Math.PI/180);
@@ -222,7 +243,6 @@ export function drawPanel(ctx, w, h, state, index) {
   // A continuous dark ground replaces white gutters; panels overlap as cutouts.
   ctx.fillStyle = "#090d1b";
   ctx.fillRect(x - 2, y - 2, pw + 4, ph + 4);
-  const photo=state.photos[c.photo] || state.photos[0];
   if (state.ink) posterizePanel(ctx,x,y,pw,ph,state,photo,c); else coverImage(ctx,photo,x,y,pw,ph,c);
   if (!state.ink && photo) {
     const pixels = ctx.getImageData(x, y, pw, ph);

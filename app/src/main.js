@@ -42,18 +42,6 @@ resetButton.addEventListener("click", () => {
   syncInputs();
   render();
 });
-// Ensure one-click reset also starts from the clean art-directed defaults.
-const resetButton = document.querySelector("#resetAll");
-resetButton.addEventListener("click", () => {
-  state.layers = defaultLayers();
-  for (const name of ["VICE FRAME", "Credit", "Caption", "COMING SOON"]) {
-    const layer = state.layers.find((item) => item.name === name);
-    if (layer) layer.visible = false;
-  }
-  setLayout(state.layout);
-  syncInputs();
-  render();
-});
 const canvas = document.querySelector("#poster"),
   ctx = canvas.getContext("2d");
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));

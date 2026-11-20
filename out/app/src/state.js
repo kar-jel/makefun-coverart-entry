@@ -1,0 +1,167 @@
+export const LAYOUTS = {
+  cover: {
+    label: "COVER",
+    panels: [
+      { x: 0.02, y: 0.205, w: 0.52, h: 0.63, rotate: -5 },
+      { x: 0.555, y: 0.215, w: 0.42, h: 0.27, rotate: 3.5 },
+      { x: 0.545, y: 0.505, w: 0.41, h: 0.285, rotate: -3 },
+      { x: 0.05, y: 0.75, w: 0.29, h: 0.135, rotate: 2.5 },
+      { x: 0.35, y: 0.735, w: 0.30, h: 0.145, rotate: -2 },
+      { x: 0.655, y: 0.75, w: 0.30, h: 0.135, rotate: 2.5 },
+    ],
+  },
+  triptych: {
+    label: "TRIPTYCH",
+    panels: [
+      { x: 0.025, y: 0.235, w: 0.305, h: 0.65 },
+      { x: 0.3475, y: 0.235, w: 0.305, h: 0.65 },
+      { x: 0.67, y: 0.235, w: 0.305, h: 0.65 },
+    ],
+  },
+  grid: {
+    label: "2 × 2 GRID",
+    panels: [
+      { x: 0.025, y: 0.235, w: 0.46, h: 0.315 },
+      { x: 0.515, y: 0.235, w: 0.46, h: 0.315 },
+      { x: 0.025, y: 0.575, w: 0.46, h: 0.31 },
+      { x: 0.515, y: 0.575, w: 0.46, h: 0.31 },
+    ],
+  },
+  single: {
+    label: "FULL BLEED",
+    panels: [{ x: 0.025, y: 0.035, w: 0.95, h: 0.86 }],
+  },
+};
+export const GRADES = {
+  neon: { label: "NEON VICE", hue: 0, sat: 1.45, contrast: 1.3, warm: 4, vignette: 0.28, tint: true },
+  sunset: {
+    label: "Sunset",
+    hue: 0,
+    sat: 1.34,
+    contrast: 1.12,
+    warm: 12,
+    vignette: 0.34,
+  },
+  dusk: {
+    label: "Miami Dusk",
+    hue: -12,
+    sat: 1.18,
+    contrast: 1.1,
+    warm: -8,
+    vignette: 0.42,
+  },
+  noir: {
+    label: "Neon Noir",
+    hue: 18,
+    sat: 1.45,
+    contrast: 1.3,
+    warm: -14,
+    vignette: 0.52,
+  },
+  acid: {
+    label: "Acid",
+    hue: 68,
+    sat: 1.42,
+    contrast: 1.17,
+    warm: 4,
+    vignette: 0.3,
+  },
+};
+export const LETTERING = {
+  stacked: { label: "STACKED OUTLINE", mode: "stacked" },
+  gradient: { label: "SUNSET GRADIENT", mode: "gradient" },
+  neon: { label: "NEON GLOW", mode: "neon" },
+};
+export const LOOKS = {
+  neon: { label: "NEON VICE", grade: "neon", lettering: "gradient", decor: true },
+  sunset: {
+    label: "SUNSET",
+    grade: "sunset",
+    lettering: "stacked",
+    decor: true,
+  },
+  dusk: {
+    label: "MIAMI DUSK",
+    grade: "dusk",
+    lettering: "gradient",
+    decor: true,
+  },
+  noir: { label: "NEON NOIR", grade: "noir", lettering: "neon", decor: false },
+  acid: {
+    label: "ACID CITY",
+    grade: "acid",
+    lettering: "stacked",
+    decor: true,
+  },
+};
+export const SIZES = {
+  square: { label: "SQUARE · 1080 × 1080", width: 1080, height: 1080 },
+  portrait: { label: "PORTRAIT · 1080 × 1350", width: 1080, height: 1350 },
+  landscape: { label: "LANDSCAPE · 1920 × 1080", width: 1920, height: 1080 },
+};
+export const state = {
+  layout: "cover",
+  size: "square",
+  photos: [],
+  crops: LAYOUTS.cover.panels.map(() => ({
+    photo: 0,
+    x: 0,
+    y: 0,
+    zoom: 1,
+    rotate: 0,
+    flip: false,
+  })),
+  selected: 0,
+  varyPanels: true,
+  ink: 0,
+  inkLevels: 16,
+  grade: "neon",
+  lettering: "gradient",
+  look: "neon",
+  decor: true,
+  caption: "LIVE WITHOUT LIMITS",
+  hue: 0,
+  saturation: 145,
+  contrast: 130,
+  warmth: 4,
+  vignette: 28,
+  capSize: 9,
+  spacing: 3,
+  outline: 4,
+  shadow: 8,
+  capY: 82,
+};
+export function resetState() {
+  Object.assign(state, {
+    layout: "cover",
+    size: "square",
+    photos: [],
+    crops: LAYOUTS.cover.panels.map(() => ({
+      photo: 0,
+      x: 0,
+      y: 0,
+      zoom: 1,
+      rotate: 0,
+      flip: false,
+    })),
+    selected: 0,
+    varyPanels: true,
+  ink: 0,
+  inkLevels: 16,
+  grade: "neon",
+  lettering: "gradient",
+  look: "neon",
+    decor: true,
+    caption: "LIVE WITHOUT LIMITS",
+    hue: 0,
+    saturation: 145,
+    contrast: 130,
+    warmth: 4,
+    vignette: 28,
+    capSize: 9,
+    spacing: 3,
+    outline: 4,
+    shadow: 8,
+    capY: 82,
+  });
+}

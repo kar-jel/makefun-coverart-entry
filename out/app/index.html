@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>VICE//FRAME — Cover Studio</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand"
+        ><span class="mark">VF</span
+        ><span
+          >VICE<span class="slash">//</span>FRAME<small
+            >PERSONAL COVER STUDIO</small
+          ></span
+        ></a
+      >
+      <div class="topnote"><i></i> LOCAL EDIT · NOTHING UPLOADED</div>
+    </header>
+    <main class="workspace">
+      <aside class="sidebar">
+        <div class="intro"><div class="eyebrow">VICE//FRAME · YOUR CITY. YOUR STORY.</div></div>
+        <div class="blocktitle"><span>EDITOR</span></div><nav id="editorTabs" class="editor-tabs"><button data-pane="photos" class="active">PHOTO</button><button data-pane="look">GRADE</button><button data-pane="type">TYPE</button><button data-pane="layers">LAYERS</button><button data-pane="presets">PRESETS</button></nav><div class="historybar"><button id="undo" disabled>↶ Undo</button><button id="redo" disabled>↷ Redo</button></div><div id="presetStrip" class="preset-strip"></div><button id="savePreset" class="textbtn">＋ SAVE PRESET</button><button id="randomPreset" class="textbtn">⤨ RANDOM</button>
+        <section class="block photos" data-pane-content="photos">
+          <div class="blocktitle">
+            <span>01 / YOUR PHOTOS</span
+            ><button id="samples" class="textbtn">USE A SAMPLE ↗</button><button id="vary" class="textbtn">VARY ↻</button>
+          </div>
+          <label class="drop" id="drop"
+            ><input id="files" type="file" accept="image/*" multiple /><span
+              class="plus"
+              >＋</span
+            ><span
+              ><b>Choose photos</b
+              ><small>or drop them here · JPG / PNG</small></span
+            ></label
+          >
+          <div id="photoList" class="photo-list"></div>
+          <div class="tiny">
+            Select a panel in the poster. Drag to frame it.
+          </div>
+        </section>
+        <section class="block" data-pane-content="photos">
+          <div class="blocktitle"><span>02 / COMPOSITION</span></div>
+          <div class="seg" id="layouts"></div>
+          <div class="row"><label>Panel target</label><span id="selectedName">PANEL 01</span></div><div id="panelPicker" class="panel-picker" aria-label="Select panel"></div>
+          <label class="check vary-check"><input id="varyPanels" type="checkbox" checked /> Vary photos &amp; crops by panel</label>
+          <div class="buttonrow">
+            <button id="rotate">↻ Rotate</button
+            ><button id="flip">⇋ Flip</button
+            ><button id="resetCrop">Reset crop</button>
+          </div>
+          <label class="sliderlabel"
+            >ZOOM <output id="zoomOut"></output
+            ><input id="zoom" type="range" min="1" max="3" step=".01" value="1"
+          /></label>
+        </section>
+        <section class="block" data-pane-content="look">
+          <div class="blocktitle">
+            <span>03 / THE LOOK</span>
+            ><button id="random" class="textbtn">⤨ RANDOMISE</button>
+          </div>
+          <div id="looks" class="lookgrid"></div>
+          <div class="row">
+            <label>Colour grade</label
+            ><select id="grade"></select>
+          </div>
+          <div class="tweakgrid">
+            <label
+              >HUE<input
+                id="hue"
+                type="range"
+                min="-30"
+                max="30"
+                value="0" /></label
+            ><label
+              >SATURATION<input
+                id="saturation"
+                type="range"
+                min="50"
+                max="180"
+                value="120" /></label
+            ><label
+              >CONTRAST<input
+                id="contrast"
+                type="range"
+                min="70"
+                max="150"
+                value="110" /></label
+            ><label
+              >WARMTH<input
+                id="warmth"
+                type="range"
+                min="-50"
+                max="50"
+                value="8" /></label
+            ><label
+              >VIGNETTE<input
+                id="vignette"
+                type="range"
+                min="0"
+                max="100"
+                value="38"
+            /></label>
+          </div>
+          <label class="check"><input id="decor" type="checkbox" checked /> Add sunset / skyline artwork</label>
+          <label class="sliderlabel">INK <output id="inkOut">0</output><input id="ink" type="range" min="0" max="100" value="0" /></label>
+        </section>
+        <section class="block captionblock" data-pane-content="type">
+          <div class="blocktitle"><span>04 / THE HEADLINE</span></div>
+          <input
+            id="caption"
+            class="captioninput"
+            value="LIVE WITHOUT LIMITS"
+            maxlength="38"
+            aria-label="Cover caption"
+          />
+          <div class="row">
+            <label>Lettering</label
+            ><select id="lettering"></select>
+          </div>
+          <div class="tweakgrid">
+            <label
+              >SIZE<input
+                id="capSize"
+                type="range"
+                min="4"
+                max="14"
+                value="9" /></label
+            ><label
+              >SPACING<input
+                id="spacing"
+                type="range"
+                min="0"
+                max="14"
+                value="3" /></label
+            ><label
+              >OUTLINE<input
+                id="outline"
+                type="range"
+                min="0"
+                max="12"
+                value="4" /></label
+            ><label
+              >SHADOW<input
+                id="shadow"
+                type="range"
+                min="0"
+                max="18"
+                value="8" /></label
+            ><label
+              >HEIGHT<input id="capY" type="range" min="75" max="96" value="87"
+            /></label>
+          </div>
+        </section>
+        <section class="block" data-pane-content="layers"><div class="blocktitle"><span>05 / LAYERS</span></div><div id="layerList"></div><label class="sliderlabel">ROTATION <input id="layerRotate" type="range" min="-180" max="180" value="0"></label></section><section class="block" data-pane-content="presets"><div class="blocktitle"><span>06 / PRESETS</span></div><div id="presetLibrary"></div></section>
+        <section class="block finalrow">
+          <label>EXPORT SIZE<select id="size"></select></label
+          ><button id="download" class="download">↓ &nbsp; DOWNLOAD PNG</button
+          ><button id="resetAll" class="reset">Reset everything</button>
+        </section>
+      </aside>
+      <section class="stage">
+        <div class="stage-export"><label>EXPORT PNG · SIZE<select id="size"></select></label><button id="download" class="download">↓ DOWNLOAD PNG</button></div>
+        <div class="stagehead">
+          <div>
+            <span class="eyebrow">LIVE CANVAS</span
+            ><span id="ratio" class="ratio">SQUARE · 1080 × 1080</span>
+          </div>
+          <div class="hint" id="hint">
+            Click a panel to select · drag to reposition · wheel to zoom
+          </div>
+        </div>
+        <div class="canvaswrap">
+          <canvas id="poster" aria-label="Poster preview"></canvas>
+          <div id="toast" role="status"></div>
+        </div>
+        <div class="stagefoot"><span>ZOOM <b id="stageZoom">100%</b> <button id="fitView">FIT</button> <button id="resetView">RESET</button></span><span>DRAG · WHEEL ZOOM · ARROWS NUDGE · + / − ZOOM</span></div>
+      </section>
+    </main>
+  </body>
+</html>
