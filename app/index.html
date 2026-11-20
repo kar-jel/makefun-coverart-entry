@@ -29,7 +29,7 @@
         <section class="block photos">
           <div class="blocktitle">
             <span>01 / YOUR PHOTOS</span
-            ><button id="samples" class="textbtn">LOAD 6 SAMPLE FRAMES ↗</button>
+            ><button id="samples" class="textbtn">USE A SAMPLE ↗</button><button id="vary" class="textbtn">VARY ↻</button>
           </div>
           <label class="drop" id="drop"
             ><input id="files" type="file" accept="image/*" multiple /><span
@@ -110,10 +110,8 @@
                 value="38"
             /></label>
           </div>
-          <label class="check"
-            ><input id="decor" type="checkbox" checked /> Add sunset / skyline
-            artwork</label
-          >
+          <label class="check"><input id="decor" type="checkbox" checked /> Add sunset / skyline artwork</label>
+          <label class="sliderlabel">INK <output id="inkOut">70</output><input id="ink" type="range" min="0" max="100" value="70" /></label>
         </section>
         <section class="block captionblock">
           <div class="blocktitle"><span>04 / THE HEADLINE</span></div>

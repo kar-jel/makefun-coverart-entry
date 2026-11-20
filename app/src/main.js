@@ -210,3 +210,4 @@ window.addEventListener("keydown", (e) => {
 setLayout(state.layout);
 syncInputs();
 fitCanvas();
+(async()=>{const samples=[0,1];await Promise.all(samples.map(i=>api.loadSample(i,state,()=>{})));state.crops=[{photo:0,x:0,y:0,zoom:1,rotate:0,flip:false},{photo:1,x:-.35,y:-.25,zoom:1.35,rotate:0,flip:false},{photo:0,x:.24,y:.2,zoom:1.15,rotate:0,flip:false}];refreshPhotoList(state);render();})();

@@ -66,6 +66,7 @@ export function bindControls(api) {
     ["contrast", "contrast"],
     ["warmth", "warmth"],
     ["vignette", "vignette"],
+    ["ink", "ink"],
     ["capSize", "capSize"],
     ["spacing", "spacing"],
     ["outline", "outline"],
@@ -112,23 +113,13 @@ export function bindControls(api) {
   };
   el("samples").onclick = async () => {
     try {
-      const samples = Array.from({ length: 6 }, (_, i) => i);
-      await Promise.all(samples.map((i) => api.loadSample(i, s, () => {})));
-      s.crops.forEach((crop) => {
-        const frame = s.photos[crop.photo];
-        if (frame?._samplePosition) {
-          crop.x = (0.5 - frame._samplePosition[0]) * 2;
-          crop.y = (0.5 - frame._samplePosition[1]) * 2;
-        }
-      });
-      fitPanels(s);
-      refreshPhotoList(s);
-      api.toast("Six sample photos loaded — select a photo chip for the active panel");
-      api.render();
-    } catch {
-      api.toast("Could not load sample photos");
-    }
+      const n=s.photos.length; await Promise.all([0,1].map(i=>api.loadSample(i,s,()=>{})));
+      s.crops=[{photo:n,x:0,y:0,zoom:1,rotate:0,flip:false},{photo:n+1,x:-.35,y:-.25,zoom:1.35,rotate:0,flip:false},{photo:n,x:.24,y:.2,zoom:1.15,rotate:0,flip:false}];
+      refreshPhotoList(s); api.toast("Two sample photos loaded across three varied panels"); api.render();
+    } catch { api.toast("Could not load sample photos"); }
   };
+  let varySeed=1937;
+  el("vary").onclick=()=>{s.crops.forEach((c,i)=>{varySeed=(varySeed*1664525+1013904223)>>>0;c.x=((varySeed&65535)/65535-.5)*.9;varySeed=(varySeed*1664525+1013904223)>>>0;c.y=((varySeed&65535)/65535-.5)*.8;c.zoom=[1,1.35,1.15][i%3]+((varySeed>>>16)/65535-.5)*.18;});api.render();};
   el("files").onchange = async (e) => {
     for (const file of e.target.files) await addPhoto(file);
     el("files").value = "";
