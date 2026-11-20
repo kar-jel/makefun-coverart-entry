@@ -112,11 +112,28 @@ export function bindControls(api) {
     }
   };
   el("samples").onclick = async () => {
-    try {
-      const n=s.photos.length; await Promise.all([0,1].map(i=>api.loadSample(i,s,()=>{})));
-      s.crops=[{photo:n,x:0,y:0,zoom:1,rotate:0,flip:false},{photo:n+1,x:-.35,y:-.25,zoom:1.35,rotate:0,flip:false},{photo:n,x:.24,y:.2,zoom:1.15,rotate:0,flip:false}];
-      refreshPhotoList(s); api.toast("Two sample photos loaded across three varied panels"); api.render();
-    } catch { api.toast("Could not load sample photos"); }
+    const start = s.photos.length;
+    const loaded = await Promise.all(
+      [0, 1, 2, 3].map((i) => api.loadSample(i, s, () => {}).catch(() => null)),
+    );
+    const valid = loaded.filter(Boolean);
+    if (!valid.length) {
+      api.toast("No bundled sample photos could be loaded");
+      api.render();
+      return;
+    }
+    const indices = valid.map((_, i) => start + i);
+    s.crops = valid.map((img, i) => ({
+      photo: indices[i],
+      x: (img._samplePosition?.[0] ?? 0.5) - 0.5,
+      y: (img._samplePosition?.[1] ?? 0.5) - 0.5,
+      zoom: img._sampleZoom || 1,
+      rotate: 0,
+      flip: false,
+    }));
+    refreshPhotoList(s);
+    api.toast(`${valid.length} sample vignettes loaded`);
+    api.render();
   };
   let varySeed=1937;
   el("vary").onclick=()=>{s.crops.forEach((c,i)=>{varySeed=(varySeed*1664525+1013904223)>>>0;c.x=((varySeed&65535)/65535-.5)*.9;varySeed=(varySeed*1664525+1013904223)>>>0;c.y=((varySeed&65535)/65535-.5)*.8;c.zoom=[1,1.35,1.15][i%3]+((varySeed>>>16)/65535-.5)*.18;});api.render();};

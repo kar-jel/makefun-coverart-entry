@@ -126,34 +126,40 @@ export function drawDecoration(ctx, x, y, w, h) {
   }
   ctx.restore();
 }
-export function drawLockup(ctx, w, h) {
+export function drawLockup(ctx, w, h, layout = "cover") {
   ctx.save();
-  ctx.font = `${h * 0.061}px Anton,Impact,sans-serif`;
-  ctx.textAlign = "left";
-  ctx.lineJoin = "round";
-  ctx.lineWidth = h * 0.003;
-  ctx.strokeStyle = "#151324";
-  const title=ctx.createLinearGradient(0,h*.045,0,h*.13);title.addColorStop(0,"#fff");title.addColorStop(1,"#ff69bd");
-  ctx.fillStyle = title;
-  ctx.shadowColor = "#ff4e8d";
-  ctx.shadowBlur = h * 0.015;
-  ctx.strokeText("GTA", w * 0.055, h * 0.105);
-  ctx.fillText("GTA", w * 0.055, h * 0.105);
-  ctx.strokeStyle="#39eaff";ctx.lineWidth=h*.001;ctx.strokeText("GTA",w*.055,h*.105);
-  const x = w * 0.225,
-    y = h * 0.108,
-    size = h * 0.047;
-  ctx.font = `bold ${size}px Arial`;
-  ctx.fillStyle = title;
-  ctx.fillText("6", x, y);
-  ctx.fillStyle = title;
-  ctx.font = `700 ${h * 0.010}px Arial`;
-  ctx.fillText("VICE CITY", w * 0.06, h * 0.126);
+  const top = h * 0.035, bottom = h * 0.225;
+  if (layout === "single") {
+    const scrim = ctx.createLinearGradient(0, 0, 0, h * 0.31);
+    scrim.addColorStop(0, "rgba(9,7,25,.94)");
+    scrim.addColorStop(1, "rgba(9,7,25,0)");
+    ctx.fillStyle = scrim;
+    ctx.fillRect(0, 0, w, h * 0.31);
+  }
+  const blockW = w * 0.70, x = (w - blockW) / 2;
+  const glow = ctx.createRadialGradient(w/2, h*.12, 0, w/2, h*.12, blockW*.6);
+  glow.addColorStop(0, "rgba(255,36,165,.28)"); glow.addColorStop(1, "rgba(255,36,165,0)");
+  ctx.fillStyle = glow; ctx.fillRect(x, top, blockW, bottom-top);
+  const base = h * 0.115;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
+  const title = ctx.createLinearGradient(0, h*.045, 0, h*.145);
+  title.addColorStop(0, "#ffffff"); title.addColorStop(.48, "#c8d0dc"); title.addColorStop(1, "#ff55c8");
+  ctx.font = `${h*.105}px Anton,Impact,sans-serif`;
+  ctx.lineWidth = h*.004; ctx.strokeStyle = "#100d20"; ctx.shadowColor="#ff3fc1"; ctx.shadowBlur=h*.018;
+  ctx.strokeText("VICE FRAME", w/2, base);
+  ctx.fillStyle=title; ctx.fillText("VICE FRAME", w/2, base);
+  ctx.shadowBlur=0; ctx.lineWidth=h*.002; ctx.strokeStyle="#4beeff"; ctx.strokeText("VICE FRAME",w/2,base);
+  const subY=h*.165;
+  ctx.strokeStyle="#ff5bd1";ctx.lineWidth=h*.0012;ctx.beginPath();ctx.moveTo(w*.26,subY-h*.017);ctx.lineTo(w*.74,subY-h*.017);ctx.moveTo(w*.26,subY+h*.017);ctx.lineTo(w*.74,subY+h*.017);ctx.stroke();
+  ctx.font=`${h*.023}px Anton,Impact,sans-serif`;ctx.fillStyle="#f7f2ff";ctx.letterSpacing=`${h*.008}px`;ctx.fillText("ORIGINAL CITY STORIES",w/2,subY);
+  const bx=w*.82, by=h*.075, bw=w*.105,bh=h*.12;
+  ctx.beginPath();ctx.roundRect(bx,by,bw,bh,h*.018);ctx.fillStyle="rgba(18,12,35,.9)";ctx.fill();ctx.lineWidth=h*.003;ctx.strokeStyle="#55edff";ctx.stroke();
+  ctx.font=`${h*.071}px Anton,Impact,sans-serif`;ctx.fillStyle=title;ctx.fillText("17",bx+bw/2,by+bh/2);
   ctx.restore();
 }
 export function drawCaption(ctx, w, h, s) {
   ctx.save();
-  const y = (h * s.capY) / 100,
+  const y = clamp((h * s.capY) / 100, h * 0.70, h * 0.90),
     style = LETTERING[s.lettering],
     text = (s.caption || "YOUR STORY").toUpperCase(),
     max = w * 0.86,
@@ -266,7 +272,7 @@ export function drawPoster(ctx, w, h, state) {
   const lay = LAYOUTS[state.layout];
   for (let i = 0; i < lay.panels.length; i++) drawPanel(ctx, w, h, state, i);
   if (state.decor) drawDecoration(ctx, 0, 0, w, h);
-  drawLockup(ctx, w, h);
+  drawLockup(ctx, w, h, state.layout);
   const y = drawCaption(ctx, w, h, state);
   drawBottomBar(ctx, w, h, y);
   ctx.save();

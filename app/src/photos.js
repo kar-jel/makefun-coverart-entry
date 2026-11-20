@@ -12,25 +12,24 @@ export function loadPhoto(file) {
   });
 }
 export function loadSample(index = 0) {
+  const frame = SAMPLE_PHOTOS[index % SAMPLE_PHOTOS.length];
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
-      img._label = SAMPLE_PHOTOS[index % SAMPLE_PHOTOS.length].label;
-      const frame = SAMPLE_PHOTOS[index % SAMPLE_PHOTOS.length];
+      img._label = frame.label;
       img._samplePosition = frame.position || [0.5, 0.5];
+      img._sampleZoom = frame.zoom || 1;
       resolve(img);
     };
-    img.onerror = reject;
-    img.src = SAMPLE_PHOTOS[index % SAMPLE_PHOTOS.length].src;
+    img.onerror = () => reject(new Error(`Could not load ${frame.src}`));
+    img.src = frame.src;
   });
 }
 export const SAMPLE_PHOTOS = [
-  { src: "samples/boulevard.jpg", label: "Boulevard · wide" },
-  { src: "samples/pier.jpg", label: "Pier · coast" },
-  { src: "samples/boulevard.jpg", label: "Boulevard · detail", position: [0.68, 0.5] },
-  { src: "samples/pier.jpg", label: "Pier · horizon", position: [0.5, 0.33] },
-  { src: "samples/boulevard.jpg", label: "Boulevard · lights", position: [0.34, 0.68] },
-  { src: "samples/pier.jpg", label: "Pier · sunset", position: [0.72, 0.58] },
+  { src: "samples/boulevard.jpg", label: "Boulevard · wide", position: [0.5, 0.5], zoom: 1 },
+  { src: "samples/boulevard.jpg", label: "Boulevard · detail", position: [0.72, 0.48], zoom: 1.45 },
+  { src: "samples/pier.jpg", label: "Pier · coast", position: [0.5, 0.6], zoom: 1 },
+  { src: "samples/pier.jpg", label: "Pier · horizon", position: [0.52, 0.3], zoom: 1.35 },
 ];
 export function fitPanels(state) {
   if (state.varyPanels === false || state.photos.length === 1) state.crops.forEach((c) => (c.photo = 0));

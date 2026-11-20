@@ -1,19 +1,27 @@
 export const LAYOUTS = {
+  cover: {
+    label: "COVER",
+    panels: [
+      { x: 0.025, y: 0.235, w: 0.55, h: 0.65 },
+      { x: 0.59, y: 0.235, w: 0.385, h: 0.315 },
+      { x: 0.59, y: 0.575, w: 0.385, h: 0.31 },
+    ],
+  },
   triptych: {
     label: "TRIPTYCH",
     panels: [
-      { x: 0.025, y: 0.035, w: 0.305, h: 0.86 },
-      { x: 0.3475, y: 0.035, w: 0.305, h: 0.86 },
-      { x: 0.67, y: 0.035, w: 0.305, h: 0.86 },
+      { x: 0.025, y: 0.235, w: 0.305, h: 0.65 },
+      { x: 0.3475, y: 0.235, w: 0.305, h: 0.65 },
+      { x: 0.67, y: 0.235, w: 0.305, h: 0.65 },
     ],
   },
   grid: {
     label: "2 × 2 GRID",
     panels: [
-      { x: 0.025, y: 0.035, w: 0.46, h: 0.42 },
-      { x: 0.515, y: 0.035, w: 0.46, h: 0.42 },
-      { x: 0.025, y: 0.485, w: 0.46, h: 0.41 },
-      { x: 0.515, y: 0.485, w: 0.46, h: 0.41 },
+      { x: 0.025, y: 0.235, w: 0.46, h: 0.315 },
+      { x: 0.515, y: 0.235, w: 0.46, h: 0.315 },
+      { x: 0.025, y: 0.575, w: 0.46, h: 0.31 },
+      { x: 0.515, y: 0.575, w: 0.46, h: 0.31 },
     ],
   },
   single: {
@@ -89,10 +97,10 @@ export const SIZES = {
   landscape: { label: "LANDSCAPE · 1920 × 1080", width: 1920, height: 1080 },
 };
 export const state = {
-  layout: "triptych",
+  layout: "cover",
   size: "square",
   photos: [],
-  crops: LAYOUTS.triptych.panels.map(() => ({
+  crops: LAYOUTS.cover.panels.map(() => ({
     photo: 0,
     x: 0,
     y: 0,
@@ -122,10 +130,10 @@ export const state = {
 };
 export function resetState() {
   Object.assign(state, {
-    layout: "triptych",
+    layout: "cover",
     size: "square",
     photos: [],
-    crops: LAYOUTS.triptych.panels.map(() => ({
+    crops: LAYOUTS.cover.panels.map(() => ({
       photo: 0,
       x: 0,
       y: 0,
