@@ -25,6 +25,15 @@ function coverImage(ctx, img, x, y, w, h, c) {
 }
 export function drawGrade(ctx, x, y, w, h, state) {
   const g = GRADES[state.grade];
+  if (g.tint) {
+    ctx.globalCompositeOperation = "color";
+    const ramp = ctx.createLinearGradient(x, y+h, x+w, y);
+    ramp.addColorStop(0, "#29105f"); ramp.addColorStop(.48, "#122e55"); ramp.addColorStop(1, "#ff4bb4");
+    ctx.fillStyle = ramp; ctx.fillRect(x,y,w,h);
+    ctx.globalCompositeOperation = "screen";
+    const rim=ctx.createLinearGradient(0,y,0,y+h*.18); rim.addColorStop(0,"rgba(74,245,255,.34)");rim.addColorStop(1,"transparent");ctx.fillStyle=rim;ctx.fillRect(x,y,w,h*.18);
+    ctx.globalCompositeOperation="source-over";
+  }
   ctx.save();
   ctx.fillStyle = `hsla(${g.hue + state.hue},90%,55%,.13)`;
   ctx.fillRect(x, y, w, h);
@@ -55,17 +64,24 @@ export function drawGrade(ctx, x, y, w, h, state) {
 }
 export function drawDecoration(ctx, x, y, w, h) {
   ctx.save();
-  ctx.globalAlpha = 0.86;
+  ctx.globalCompositeOperation="screen";
+  const bloom=ctx.createRadialGradient(x+w*.76,y+h*.18,0,x+w*.76,y+h*.18,h*.55);
+  bloom.addColorStop(0,"rgba(255,55,184,.28)"); bloom.addColorStop(1,"rgba(36,220,255,0)");
+  ctx.fillStyle=bloom; ctx.fillRect(x,y,w,h*.44);
+  ctx.globalCompositeOperation="source-over";
+  ctx.globalAlpha = 0.92;
   const sun = ctx.createLinearGradient(0, y + h * 0.1, 0, y + h * 0.55);
   sun.addColorStop(0, "#ffe780");
   sun.addColorStop(1, "#ff5182");
   ctx.fillStyle = sun;
   ctx.beginPath();
-  ctx.arc(x + w * 0.78, y + h * 0.3, h * 0.19, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.78, y + h * 0.30, h * 0.19, Math.PI, 0);
+  ctx.lineTo(x+w*.97,y+h*.30); ctx.closePath();
   ctx.fill();
   ctx.save();
   ctx.beginPath();
-  ctx.arc(x + w * 0.78, y + h * 0.3, h * 0.19, 0, Math.PI * 2);
+  ctx.arc(x + w * 0.78, y + h * 0.30, h * 0.19, Math.PI, 0);
+  ctx.lineTo(x+w*.97,y+h*.30); ctx.closePath();
   ctx.clip();
   ctx.fillStyle = "rgba(71,24,72,.38)";
   for (let i = 0; i < 7; i++)
@@ -214,6 +230,15 @@ export function drawPanel(ctx, w, h, state, index) {
   ctx.filter = "none";
   ctx.globalCompositeOperation = "source-over";
   drawGrade(ctx, x, y, pw, ph, state);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x,y,pw,ph); ctx.clip();
+  // Chromatic fringe is confined to the panel edges.
+  ctx.globalAlpha=.22; ctx.globalCompositeOperation="screen";
+  ctx.fillStyle="#ff245e"; ctx.fillRect(x,y,pw,Math.max(2,h*.002));
+  ctx.fillStyle="#28efff"; ctx.fillRect(x,y+ph-Math.max(2,h*.002),pw,Math.max(2,h*.002));
+  ctx.globalAlpha=.08; ctx.fillStyle="#65efff";
+  for(let sy=y;sy<y+ph;sy+=Math.max(3,h*.004)) ctx.fillRect(x,sy,pw,Math.max(1,h*.0006));
+  ctx.restore();
   ctx.strokeStyle = "rgba(255,244,218,.68)";
   ctx.lineWidth = Math.max(1, h * 0.0018);
   ctx.strokeRect(x, y, pw, ph);

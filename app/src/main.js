@@ -110,17 +110,11 @@ function sync() {
 }
 function setLayout(k) {
   state.layout = k;
-  state.crops = activeLayout().panels.map(
-    (_, i) =>
-      state.crops[i] || {
-        photo: Math.min(i, Math.max(0, state.photos.length - 1)),
-        x: 0,
-        y: 0,
-        zoom: 1,
-        rotate: 0,
-        flip: false,
-      },
-  );
+  state.crops = activeLayout().panels.map((_, i) => {
+    const crop = state.crops[i];
+    if (crop) return crop;
+    return { photo: state.varyPanels && state.photos.length ? i % state.photos.length : 0, x: 0, y: 0, zoom: 1, rotate: 0, flip: false };
+  });
   document
     .querySelectorAll("#layouts button")
     .forEach((b) => b.classList.toggle("active", b.dataset.key === k));

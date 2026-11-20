@@ -14,6 +14,6 @@ Controls:
 
 Export sizes: Square 1080×1080, Portrait 1080×1350, Landscape 1920×1080.
 
-The bundled Bebas Neue font is used under the SIL Open Font License; see app/fonts/LICENSE-OFL.txt.
+The bundled Anton and Bebas Neue fonts are used under the SIL Open Font License; see `app/fonts/LICENSE-Anton-OFL.txt` and `app/fonts/LICENSE-OFL.txt`.
 
 [![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01)

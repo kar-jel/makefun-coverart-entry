@@ -60,6 +60,7 @@ export function bindControls(api) {
     ["lettering", "lettering"],
     ["size", "size"],
     ["decor", "decor"],
+    ["varyPanels", "varyPanels"],
     ["hue", "hue"],
     ["saturation", "saturation"],
     ["contrast", "contrast"],
@@ -77,6 +78,12 @@ export function bindControls(api) {
   el("zoom").oninput = (e) => {
     s.crops[s.selected].zoom = Number(e.target.value);
     api.sync();
+    api.render();
+  };
+  el("varyPanels").onchange = (e) => {
+    s.varyPanels = e.target.checked;
+    fitPanels(s);
+    refreshPhotoList(s);
     api.render();
   };
   el("rotate").onclick = () => {
@@ -105,11 +112,18 @@ export function bindControls(api) {
   };
   el("samples").onclick = async () => {
     try {
-      await api.loadSample(0, s, () => {});
-      await api.loadSample(1, s, () => {});
+      const samples = Array.from({ length: 6 }, (_, i) => i);
+      await Promise.all(samples.map((i) => api.loadSample(i, s, () => {})));
+      s.crops.forEach((crop) => {
+        const frame = s.photos[crop.photo];
+        if (frame?._samplePosition) {
+          crop.x = (0.5 - frame._samplePosition[0]) * 2;
+          crop.y = (0.5 - frame._samplePosition[1]) * 2;
+        }
+      });
       fitPanels(s);
       refreshPhotoList(s);
-      api.toast("Sample photos loaded — choose a photo chip for a panel");
+      api.toast("Six sample photos loaded — select a photo chip for the active panel");
       api.render();
     } catch {
       api.toast("Could not load sample photos");
@@ -133,7 +147,9 @@ export function bindControls(api) {
   };
   el("photoList").onclick = (e) => {
     if (e.target.dataset.photo !== undefined) {
-      s.crops[s.selected].photo = Number(e.target.dataset.photo);
+      const photo = Number(e.target.dataset.photo);
+      if (s.varyPanels) s.crops[s.selected].photo = photo;
+      else s.crops.forEach((crop) => { crop.photo = photo; });
       refreshPhotoList(s);
       api.render();
     }

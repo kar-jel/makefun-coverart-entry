@@ -22,6 +22,7 @@ export const LAYOUTS = {
   },
 };
 export const GRADES = {
+  neon: { label: "NEON VICE", hue: -18, sat: 1.8, contrast: 1.55, warm: -18, vignette: 0.58, tint: true },
   sunset: {
     label: "Sunset",
     hue: 0,
@@ -61,6 +62,7 @@ export const LETTERING = {
   neon: { label: "NEON GLOW", mode: "neon" },
 };
 export const LOOKS = {
+  neon: { label: "NEON VICE", grade: "neon", lettering: "gradient", decor: true },
   sunset: {
     label: "SUNSET",
     grade: "sunset",
@@ -99,9 +101,10 @@ export const state = {
     flip: false,
   })),
   selected: 0,
-  grade: "sunset",
+  varyPanels: true,
+  grade: "neon",
   lettering: "stacked",
-  look: "sunset",
+  look: "neon",
   decor: true,
   caption: "LIVE WITHOUT LIMITS",
   hue: 0,
@@ -129,9 +132,10 @@ export function resetState() {
       flip: false,
     })),
     selected: 0,
-    grade: "sunset",
-    lettering: "stacked",
-    look: "sunset",
+    varyPanels: true,
+  grade: "neon",
+  lettering: "stacked",
+  look: "neon",
     decor: true,
     caption: "LIVE WITHOUT LIMITS",
     hue: 0,
